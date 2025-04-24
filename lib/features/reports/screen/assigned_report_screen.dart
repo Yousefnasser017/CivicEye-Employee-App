@@ -1,12 +1,9 @@
+import 'package:civiceye/features/reports/logic/report_state.dart';
 import 'package:civiceye/models/report_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-
-import '../logic/report_cubit.dart';
-import '../logic/report_state.dart';
-
-
+import 'package:civiceye/features/reports/logic/report_cubit.dart';
 class ReportsScreen extends StatelessWidget {
   const ReportsScreen({super.key});
 
