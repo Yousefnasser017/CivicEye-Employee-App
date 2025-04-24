@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.7.0
+  sdk: ^3.6.1
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -43,11 +43,13 @@ dependencies:
   dio_cookie_manager: ^3.2.0
   cookie_jar: ^4.0.8
   flutter_secure_storage: ^9.2.4
- 
   url_launcher: ^6.3.1
   flutter_map: ^6.0.0
   latlong2: ^0.9.0
   geolocator: ^10.0.0
+  intl: ^0.20.2
+  
+ 
 
 dev_dependencies:
   flutter_test:
@@ -58,13 +60,13 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^2.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
-
+flutter:
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -75,7 +77,8 @@ dev_dependencies:
   assets:
     - assets/images/logo-white.png
     - assets/images/logo-black.png
-  #   - images/a_dot_ham.jpeg
+    
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -88,20 +91,19 @@ dev_dependencies:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  flutter:
-    fonts:
-      - family: Tajawal
-        fonts:
-          - asset: fonts/Tajawal-Regular.ttf
-            weight: 400
-          - asset: fonts/Tajawal-Medium.ttf
-            weight: 500
-          - asset: fonts/Tajawal-Bold.ttf
-            weight: 700
-          - asset: fonts/Tajawal-Light.ttf
-            weight: 300
-          - asset: fonts/Tajawal-ExtraBold.ttf
-            weight: 800
-
+  fonts:
+    - family: Tajawal
+      fonts:
+        - asset: fonts/Tajawal-Regular.ttf
+          weight: 400
+        - asset: fonts/Tajawal-Medium.ttf
+          weight: 500
+        - asset: fonts/Tajawal-Bold.ttf
+          weight: 700
+        - asset: fonts/Tajawal-Light.ttf
+          weight: 300
+        - asset: fonts/Tajawal-ExtraBold.ttf
+          weight: 800
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
