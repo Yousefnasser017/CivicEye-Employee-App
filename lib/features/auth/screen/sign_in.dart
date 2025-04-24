@@ -34,7 +34,7 @@ class LoginScreen extends StatelessWidget {
                     children: [
                       const SizedBox(height: 40),
                       // Replace with your logo image
-                      // Image.asset('assets/images/logo.png', height: 100),
+                      Image.asset('assets/images/logo-black.png', height: 100),
                       const SizedBox(height: 10),
                       const Text(
                         "مرحبا بك",
@@ -148,7 +148,7 @@ class LoginScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(30),
         ),
         child: state is LoginLoading
-            ? const CircularProgressIndicator(color: Colors.white)
+            ? const CircularProgressIndicator(color: AppColors.primary)
             : const Text(
                 "الدخول",
                 style: TextStyle(

@@ -6,11 +6,11 @@ import 'package:civiceye/models/sign_in_model.dart';
 class AuthApi {
   static final  _dio = Dio();
 
-  static Future<LoginResponseModel> login(String email, String password) async {
+  static Future<LoginResponseModel> login(String emailController, String passwordController) async {
     try {
       final res = await _dio.post(ApiConstants.login, data: {
-        'username': email,
-        'password': password,
+        'username': emailController,
+        'password': passwordController,
       });
       return LoginResponseModel.fromJson(res.data);
     } catch (e) {
