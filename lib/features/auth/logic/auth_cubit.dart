@@ -18,14 +18,14 @@ class LoginCubit extends Cubit<LoginState> {
     emit(LoginPasswordVisibilityChanged());
   }
 
-  Future<void> login(String email, String password) async {
+  Future<void> login(String emailController, String passwordController) async {
     if (!formKey.currentState!.validate()) return;
     
     emit(LoginLoading());
 
     try {
       // تسجيل الدخول
-      final loginResponse = await AuthApi.login(email, password);
+      final loginResponse = await AuthApi.login(passwordController, passwordController);
 
       if (loginResponse.type != 'Employee') {
         emit(LoginFailure('ليس لديك صلاحية الوصول.'));
