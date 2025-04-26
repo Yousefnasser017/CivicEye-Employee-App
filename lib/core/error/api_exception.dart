@@ -1,9 +1,20 @@
 class ApiException implements Exception {
   final String message;
-  final int? code;
+  final int? statusCode;
+  final dynamic data; // بيانات إضافية من الخادم
+  final StackTrace? stackTrace;
 
-  ApiException(this.message, [this.code]);
+  ApiException(
+    this.message,
+    [this.statusCode, 
+     this.data,
+     this.stackTrace,
+    ]);
 
   @override
-  String toString() => 'ApiException($code): $message';
+  String toString() => 'API Error $statusCode: $message';
+  
+  // يمكن إضافة دوال مساعدة
+  bool isUnauthorized() => statusCode == 401;
+  bool isServerError() => statusCode != null && statusCode! >= 500;
 }

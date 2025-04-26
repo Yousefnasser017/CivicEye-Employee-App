@@ -1,38 +1,75 @@
-import 'package:civiceye/core/api/api_client.dart';
-import 'package:civiceye/core/error/exceptions.dart';
-import 'package:dio/dio.dart';
+import 'package:civiceye/core/api/dio_consumer.dart';
+import 'package:civiceye/core/error/api_exception.dart';
+
 import 'package:civiceye/core/api/api_constants.dart';
+import 'package:civiceye/core/error/exceptions.dart';
 import 'package:civiceye/models/sign_in_model.dart';
+import 'package:dio/dio.dart';
 
 class AuthApi {
-  static final Dio _dio = DioClient.getDio();
+  static final Dio _dio = DioConsumer.dio;
 
+  /// تسجيل الدخول
   static Future<LoginResponseModel> login(String email, String password) async {
-  try {
-  final res = await _dio.post(ApiConstants.login, data: {
-    'username': email,
-    'password': password,
-  });
-      return LoginResponseModel.fromJson(res.data);
-    } catch (e) {
-      
-      throw Exception(ExceptionHandler.handle(e));
+    try {
+      final response = await _dio.post(
+        ApiConstants.login,
+        data: {'username': email, 'password': password},
+      );
+
+      if (response.statusCode == 200) {
+        return LoginResponseModel.fromJson(response.data);
+      } else {
+        throw ApiException(
+          'فشل تسجيل الدخول: ${response.statusMessage}',
+          response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiException(
+        ExceptionHandler.handle(e),
+        e.response?.statusCode,
+      );
     }
   }
 
+  /// تسجيل الخروج
   static Future<void> logout() async {
     try {
-      await _dio.get(ApiConstants.logout);
-    } catch (e) {
-      throw Exception(ExceptionHandler.handle(e));
+      final response = await _dio.get(ApiConstants.logout);
+      
+      if (response.statusCode != 200) {
+        throw ApiException(
+          'فشل تسجيل الخروج: ${response.statusMessage}',
+          response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiException(
+        ExceptionHandler.handle(e),
+        e.response?.statusCode,
+      );
     }
   }
 
+  /// جلب بيانات المستخدم
   static Future<Response> getUserData() async {
     try {
-      return await _dio.get(ApiConstants.user);
-    } catch (e) {
-      throw Exception(ExceptionHandler.handle(e));
+      final response = await _dio.get(ApiConstants.user);
+
+      if (response.statusCode == 200) {
+        return response;
+      } else {
+        throw ApiException(
+          'فشل جلب بيانات المستخدم: ${response.statusMessage}',
+          response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiException(
+        ExceptionHandler.handle(e),
+        e.response?.statusCode,
+      );
     }
   }
 }

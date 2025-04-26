@@ -51,6 +51,7 @@ dependencies:
   animate_do: ^4.2.0
   fluttertoast: ^8.2.12
   google_fonts: ^6.2.1
+  logger: ^2.5.0
   
  
 
