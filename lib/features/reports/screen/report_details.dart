@@ -14,6 +14,11 @@ class ReportDetailsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        centerTitle: true,
         title: const Text('تفاصيل البلاغ'),
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
       ),

@@ -1,38 +1,35 @@
-import 'package:civiceye/core/themes/cubit/theme_cubit.dart';
-import 'package:civiceye/core/utils/app_colors.dart';
+import 'package:civiceye/features/auth/logic/auth_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:civiceye/core/themes/cubit/theme_cubit.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class CustomDrawer extends StatelessWidget {
   final String username;
-
   const CustomDrawer({super.key, required this.username});
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Drawer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(color: AppColors.primary),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const CircleAvatar(
-                  radius: 30,
-                  backgroundImage: AssetImage('assets/images/user.png'),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'أهلاً، $username',
-                  style: const TextStyle(color: Colors.white, fontSize: 18),
-                ),
-              ],
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(color: colorScheme.primary),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Image.asset('assets/images/logo-white.png', width: 100, height: 100),
+                  const SizedBox(height: 10),
+                  Text('أهلاً، $username',
+                      style: const TextStyle(color: Colors.white, fontSize: 18)),
+                ],
+              ),
             ),
-          ),
-          ListTile(
+            ListTile(
               leading: const Icon(Icons.home),
               title: const Text('الرئيسية'),
               onTap: () => Navigator.pushNamed(context, '/home'),
@@ -47,50 +44,57 @@ class CustomDrawer extends StatelessWidget {
               title: const Text('الملف الشخصي'),
               onTap: () => Navigator.pushNamed(context, '/profile'),
             ),
-          ListTile(
-            leading: const Icon(Icons.info),
-            title: const Text('حول التطبيق'),
-            onTap: () {
-              Navigator.pushNamed(context, '/about');
-            },
-          ),
-          SwitchListTile(
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('حول التطبيق'),
+              onTap: () => Navigator.pushNamed(context, '/about'),
+            ),
+            SwitchListTile(
               title: const Text('الوضع الداكن'),
               secondary: const Icon(Icons.dark_mode),
               value: Theme.of(context).brightness == Brightness.dark,
               onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
             ),
-          const Spacer(),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('تسجيل الخروج'),
-          onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text(' تسجيل الخروج'),
-                  content: const Text('هل أنت متأكد أنك تريد تسجيل الخروج؟'),
-                  actions: [
-                    TextButton(
-                      child: const Text('إلغاء'),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                      child: const Text('تسجيل الخروج'),
-                      onPressed: () async {
-                        final storage = const FlutterSecureStorage();
-                        await storage.deleteAll();
-                        Navigator.of(context).pop(); // إغلاق الـ Dialog
-                        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-                      },
-                    ),
-                  ],
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child:ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text('تسجيل الخروج'),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('تأكيد تسجيل الخروج'),
+                        content: const Text('هل أنت متأكد أنك تريد تسجيل الخروج؟'),
+                        actions: [
+                          TextButton(
+                            child: const Text('إلغاء'),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                            child: const Text('تأكيد الخروج'),
+                            onPressed: () async {
+                              Navigator.of(context).pop(); // إغلاق الـ Dialog أولاً
+
+                              await context.read<LoginCubit>().logout(context);
+
+                              Fluttertoast.showToast(
+                                msg: 'تم تسجيل الخروج بنجاح',
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

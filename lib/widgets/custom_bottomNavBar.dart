@@ -8,9 +8,13 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return BottomNavigationBar(
       currentIndex: currentIndex,
       onTap: onTap,
+      selectedItemColor: colorScheme.primary,
+      unselectedItemColor: Colors.grey,
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'الرئيسية'),
         BottomNavigationBarItem(icon: Icon(Icons.list), label: 'البلاغات'),

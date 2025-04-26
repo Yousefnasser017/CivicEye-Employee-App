@@ -1,8 +1,10 @@
+import 'package:civiceye/core/error/exceptions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:civiceye/core/api/auth_api.dart';
-import 'package:civiceye/features/auth/logic/auth_state.dart';
+
+import 'auth_state.dart';
 
 class LoginCubit extends Cubit<LoginState> {
   LoginCubit() : super(LoginInitial());
@@ -18,24 +20,21 @@ class LoginCubit extends Cubit<LoginState> {
     emit(LoginPasswordVisibilityChanged());
   }
 
-  Future<void> login(String emailController, String passwordController) async {
+  Future<void> login(String email, String password) async {
     if (!formKey.currentState!.validate()) return;
-    
+
     emit(LoginLoading());
 
     try {
-      // تسجيل الدخول
-      final loginResponse = await AuthApi.login(passwordController, passwordController);
+      final loginResponse = await AuthApi.login(email, password);
 
       if (loginResponse.type != 'Employee') {
         emit(LoginFailure('ليس لديك صلاحية الوصول.'));
         return;
       }
 
-      // حفظ اسم المستخدم
       await _storage.write(key: 'username', value: loginResponse.username);
 
-      // جلب بيانات الموظف
       final userDataResponse = await AuthApi.getUserData();
       final data = userDataResponse.data;
 
@@ -47,11 +46,12 @@ class LoginCubit extends Cubit<LoginState> {
 
       emit(LoginSuccess());
     } catch (e) {
-      emit(LoginFailure(e.toString().replaceAll('Exception: ', '')));
-    }
+       
+        emit(LoginFailure(ExceptionHandler.handle(e)));
+}
   }
 
-  Future<void> logout() async {
+  Future<void> logout(BuildContext context) async {
     try {
       await AuthApi.logout();
     } catch (_) {}

@@ -2,6 +2,7 @@ import 'package:civiceye/core/routing/app_roution.dart';
 import 'package:civiceye/core/themes/app_theme.dart';
 import 'package:civiceye/core/themes/cubit/theme_cubit.dart';
 import 'package:civiceye/features/auth/logic/auth_cubit.dart';
+import 'package:civiceye/features/home/logic/home_cubit.dart';
 import 'package:civiceye/features/reports/logic/report_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,6 +28,10 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => ThemeCubit()),
         BlocProvider(create: (_) => ReportsCubit()),
         BlocProvider(create: (_) => LoginCubit()),
+        BlocProvider(create: (_) =>  HomeCubit()),
+      
+        
+
         
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(

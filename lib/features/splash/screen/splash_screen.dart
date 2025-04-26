@@ -1,43 +1,40 @@
-
+import 'package:civiceye/features/splash/logic/splash_cubit.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  final _storage = const FlutterSecureStorage();
-
-  @override
-  void initState() {
-    super.initState();
-    navigate();
-  }
-
-  Future<void> navigate() async {
-    await Future.delayed(const Duration(seconds: 2));
-    final username = await _storage.read(key: 'username');
-    if (username != null && username.isNotEmpty) {
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      Navigator.pushReplacementNamed(context, '/login');
-    }
-  }
-
-
-
-  @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF725DFE),
-      body: Center(
-        child: Image(
-          image: AssetImage('assets/images/logo-white.png'),
-          width: 120,
+    return BlocProvider(
+      create: (_) => SplashCubit()..checkLoginStatus(),
+      child: BlocListener<SplashCubit, SplashState>(
+        listener: (context, state) {
+          if (state is SplashNavigateToHome) {
+            Navigator.pushReplacementNamed(context, '/home');
+          } else if (state is SplashNavigateToLogin) {
+            Navigator.pushReplacementNamed(context, '/login');
+          }
+        },
+        child: Scaffold(
+          backgroundColor: Theme.of(context).primaryColor,
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/images/logo-white.png',
+                  width: 140,
+                  height: 140,
+                ),
+                const SizedBox(height: 20),
+                const CircularProgressIndicator(
+                  color: Colors.white,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
