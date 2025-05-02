@@ -1,42 +1,102 @@
-import 'package:civiceye/features/auth/logic/auth_cubit.dart';
+import 'package:civiceye/core/api/login_service.dart';
+import 'package:civiceye/core/storage/cache_helper.dart';
+import 'package:civiceye/core/themes/app_colors.dart';
+import 'package:civiceye/cubits/auth_cubit/auth_cubit.dart';
+import 'package:civiceye/cubits/auth_cubit/auth_state.dart';
+import 'package:civiceye/cubits/theme_cubit/theme_cubit.dart';
+import 'package:civiceye/widgets/SnackbarHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:civiceye/core/themes/cubit/theme_cubit.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
-class CustomDrawer extends StatelessWidget {
-  final String username;
-  const CustomDrawer({super.key, required this.username});
+class CustomDrawer extends StatefulWidget {
+  const CustomDrawer({super.key});
+
+  @override
+  State<CustomDrawer> createState() => _CustomDrawerState();
+}
+
+class _CustomDrawerState extends State<CustomDrawer> {
+  String fullName = 'جارٍ التحميل...';
+  bool get isDarkMode => Theme.of(context).brightness == Brightness.dark;
+
+  @override
+  void initState() {
+    super.initState();
+    loadUsername();
+  }
+
+  Future<void> loadUsername() async {
+    final data = await LocalStorageHelper.readEmployeeData();
+    setState(() {
+      fullName = data['fullName'] ?? 'غير معروف';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Drawer(
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildDrawerHeader(colorScheme),
-            _buildMenuItems(context),
-            const Spacer(),
-            _buildLogoutButton(context),
-          ],
+    return BlocListener<LoginCubit, LoginState>(
+      listener: (context, state) {
+        if (state is LogoutSuccess) {
+          SnackBarHelper.show(
+            context,
+            'تم تسجيل الخروج بنجاح',
+            type: SnackBarType.success,
+          );
+          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+        } else if (state is LogoutFailure) {
+          SnackBarHelper.show(
+            context,
+            'فشل في تسجيل الخروج: ${state.errorMessage}',
+            type: SnackBarType.error,
+          );
+        }
+      },
+      child: Drawer(
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildDrawerHeader(Theme.of(context).primaryColor),
+              _buildMenuItems(context),
+              const Spacer(),
+              _buildLogoutButton(context),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDrawerHeader(ColorScheme colorScheme) {
-    return DrawerHeader(
-      decoration: BoxDecoration(color: colorScheme.primary),
+  Widget _buildDrawerHeader(Color color) {
+    return Container(
+      height: 180,
+      decoration: BoxDecoration(color: color),
+      padding: const EdgeInsets.all(20),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.asset('assets/images/logo-white.png', width: 100, height: 100),
+          Center(
+            child: Image.asset(
+              'assets/images/logo-white.png',
+              width: 150,
+              height: 80,
+              fit: BoxFit.contain,
+            ),
+          ),
           const SizedBox(height: 10),
-          Text('أهلاً، $username',
-              style: const TextStyle(color: Colors.white, fontSize: 18)),
+          Center(
+            child: Text(
+              'أهلاً، $fullName',
+              style: const TextStyle(
+                color: AppColors.appBarLight,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );
@@ -86,7 +146,7 @@ class CustomDrawer extends StatelessWidget {
     return SwitchListTile(
       title: const Text('الوضع الداكن'),
       secondary: const Icon(Icons.dark_mode),
-      value: Theme.of(context).brightness == Brightness.dark,
+      value: isDarkMode,
       onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
     );
   }
@@ -95,7 +155,7 @@ class CustomDrawer extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: ListTile(
-        leading: const Icon(Icons.logout, color: Colors.red),
+        leading: const Icon(Icons.logout, color: Color.fromARGB(255, 255, 17, 0)),
         title: const Text('تسجيل الخروج'),
         onTap: () => _showLogoutConfirmationDialog(context),
       ),
@@ -106,51 +166,42 @@ class CustomDrawer extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('تأكيد تسجيل الخروج'),
-        content: const Text('هل أنت متأكد أنك تريد تسجيل الخروج؟'),
+        title: Text(
+          'تأكيد تسجيل الخروج',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
+        content: Text(
+          'هل تريد تسجيل الخروج؟',
+          style: TextStyle(
+            fontSize: 16,
+            color: isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
         actions: [
           TextButton(
-            child: const Text('إلغاء'),
+            child: const Text(
+              'إلغاء',
+              style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 255, 17, 0)),
+            ),
             onPressed: () => Navigator.of(context).pop(),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('تأكيد الخروج'),
-            onPressed: () => _performLogout(context),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent, shadowColor: Colors.transparent),
+            child: const Text(
+              'تأكيد',
+              style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 255, 17, 0)),
+            ),
+            onPressed: () {
+              AuthApi.logout(context);
+              Navigator.pop(context); // يغلق الـ dialog
+            },
           ),
         ],
       ),
     );
-  }
-
-  Future<void> _performLogout(BuildContext context) async {
-    Navigator.of(context).pop(); // إغلاق الـ Dialog أولاً
-    
-    try {
-      await context.read<LoginCubit>().logout();
-      
-      if (context.mounted) {
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/login',
-          (route) => false,
-        );
-        
-        Fluttertoast.showToast(
-          msg: 'تم تسجيل الخروج بنجاح',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        Fluttertoast.showToast(
-          msg: 'حدث خطأ أثناء تسجيل الخروج',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.red,
-        );
-      }
-    }
   }
 }

@@ -1,56 +1,62 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LocalStorageHelper {
-  static const _storage = FlutterSecureStorage();
+ static FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  /// حفظ بيانات الموظف الأساسية
+@visibleForTesting
+static void overrideStorage(FlutterSecureStorage newStorage) {
+  _storage = newStorage;
+}
+
+  static const _employeeKeys = [
+    'employeeId',
+    'fullName',
+    'email',
+    'department',
+    'cityName',
+    'governorateName',
+    'username',
+  ];
+
+  /// Save basic employee data
   static Future<void> saveEmployeeData(Map<String, String> data) async {
-    for (var entry in data.entries) {
-      await _storage.write(key: entry.key, value: entry.value);
-    }
+    await Future.wait(
+      data.entries.map((e) => _storage.write(key: e.key, value: e.value)),
+    );
   }
 
-  /// قراءة بيانات الموظف
+  /// Read saved employee data
   static Future<Map<String, String>> readEmployeeData() async {
-    final keys = [
-      'employeeId',
-      'fullName',
-      'email',
-      'department',
-      'cityName',
-      'governorateName',
-      'username',
-    ];
     final Map<String, String> data = {};
-    for (var key in keys) {
-      final value = await _storage.read(key: key);
-      data[key] = value ?? '';
+    for (final key in _employeeKeys) {
+      data[key] = await _storage.read(key: key) ?? '';
     }
     return data;
   }
 
-  /// حفظ آخر صفحة وصل لها المستخدم
+  /// Save last visited route
   static Future<void> saveLastPage(String route) async {
     await _storage.write(key: 'last_page', value: route);
   }
 
-  /// قراءة آخر صفحة محفوظة
+  /// Get last visited route
   static Future<String?> getLastPage() async {
-    return await _storage.read(key: 'last_page');
+    return _storage.read(key: 'last_page');
   }
 
-  /// حفظ حالة تسجيل الدخول (true / false)
+  /// Save login state (true / false)
   static Future<void> saveLoginState(bool isLoggedIn) async {
     await _storage.write(key: 'isLoggedIn', value: isLoggedIn.toString());
   }
 
-  /// قراءة حالة تسجيل الدخول
+  /// Get login state
   static Future<bool> getLoginState() async {
     final value = await _storage.read(key: 'isLoggedIn');
     return value == 'true';
   }
 
-  /// حذف كل البيانات المحفوظة
+  /// Clear all saved data
   static Future<void> clearAll() async {
     await _storage.deleteAll();
   }

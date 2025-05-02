@@ -10,7 +10,7 @@ class ExceptionHandler {
     _logger.e('حدث خطأ', error: error, stackTrace: StackTrace.current);
 
     if (error is ApiException) {
-      return error.message;
+      // return error.message;
     }
 
     // معالجة أخطاء الشبكة والاتصال

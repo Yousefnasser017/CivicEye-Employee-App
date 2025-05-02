@@ -2,13 +2,13 @@ class ApiException implements Exception {
   final String message;
   final int? statusCode;
   final dynamic data; // بيانات إضافية من الخادم
-  final StackTrace? stackTrace;
+
 
   ApiException(
     this.message,
     [this.statusCode, 
      this.data,
-     this.stackTrace,
+    
     ]);
 
   @override

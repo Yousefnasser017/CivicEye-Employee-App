@@ -9,7 +9,7 @@ class LoginResponseModel {
     required this.type,
   });
 
-  factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
+  factory LoginResponseModel.fromJson( json) {
     return LoginResponseModel(
       message: json['message'] ?? '',
       username: json['username'] ?? '',

@@ -1,11 +1,11 @@
-import 'package:civiceye/features/about/about_screen.dart';
-import 'package:civiceye/features/auth/screen/sign_in.dart';
-import 'package:civiceye/features/home/screen/home_screen.dart';
-import 'package:civiceye/features/profile/screen/profile_screen.dart';
-import 'package:civiceye/features/reports/screen/assigned_report_screen.dart';
-import 'package:civiceye/features/reports/screen/map_screen.dart';
-import 'package:civiceye/features/reports/screen/report_details.dart';
-import 'package:civiceye/features/splash/screen/splash_screen.dart';
+
+import 'package:civiceye/screens/about_screen.dart';
+// import 'package:civiceye/screens/assigned_report_screen.dart';
+import 'package:civiceye/screens/home_screen.dart';
+// import 'package:civiceye/screens/map_screen.dart';
+import 'package:civiceye/screens/profile_screen.dart';
+import 'package:civiceye/screens/sign_in.dart';
+import 'package:civiceye/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 
 class AppRouter {
@@ -17,15 +17,15 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => LoginScreen());
       case '/home':
         return MaterialPageRoute(builder: (_) => const HomeScreen());
-      case '/reports':
-        return MaterialPageRoute(builder: (_) => const ReportsScreen());
-      case '/report_details':
-        return MaterialPageRoute(builder: (_) => const ReportDetailsScreen());
-      case '/map':
-        return MaterialPageRoute(builder: (_) => MapScreen(
-          reportLat: (settings.arguments as Map<String, dynamic>?)?['latitude'],
-          reportLng: (settings.arguments as Map<String, dynamic>?)?['longitude'],
-        ));
+      // case '/reports':
+      //   return MaterialPageRoute(builder: (_) => const ReportsScreen());
+      // case '/report_details':
+      //   return MaterialPageRoute(builder: (_) => const ReportDetailsScreen());
+      // case '/map':
+      //   return MaterialPageRoute(builder: (_) => MapScreen(
+      //     reportLat: (settings.arguments as Map<String, dynamic>?)?['latitude'],
+      //     reportLng: (settings.arguments as Map<String, dynamic>?)?['longitude'],
+      //   ));
       case '/profile':
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
       case '/about':

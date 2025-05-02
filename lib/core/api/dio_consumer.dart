@@ -1,37 +1,33 @@
-import 'package:cookie_jar/cookie_jar.dart';
-import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class DioConsumer {
-  static final Dio _dio = Dio();
+  static final Dio _dio = Dio()
+    ..options.baseUrl = 'http://localhost:8000' // استبدل بـ URL الخاص بـ API الخاص بك
+    ..options.connectTimeout = const Duration(seconds: 10)
+    ..options.receiveTimeout = const Duration(seconds: 10)
+    ..options.extra['withCredentials'] = true; // يفعّل إرسال واستقبال الكوكيز (مهم جداً لـ Flutter Web)
 
   static Dio get dio {
-    if (!kIsWeb) {
-      _dio.interceptors.add(CookieManager(CookieJar()));
-    } else {
-      // حل بديل للويب
-      _dio.interceptors.add(InterceptorsWrapper(
+    _dio.interceptors.clear(); // منع التكرار
+
+    _dio.interceptors.add(
+      InterceptorsWrapper(
         onRequest: (options, handler) {
-          // إدارة الكوكيز يدوياً للويب
-          options.headers['Cookie'] = _getCookiesForWeb();
+          debugPrint('➡ [${options.method}] ${options.uri}');
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          _saveCookiesForWeb(response.headers);
+          debugPrint('✅ [${response.statusCode}] ${response.data}');
           return handler.next(response);
-        }
-      ));
-    }
+        },
+        onError: (DioException error, handler) {
+          debugPrint('❌ [${error.response?.statusCode}] ${error.message}');
+          return handler.next(error);
+        },
+      ),
+    );
+
     return _dio;
-  }
-
-  static String _getCookiesForWeb() {
-    // تطبيق منطق تخزين الكوكيز للويب (مثل استخدام shared_preferences)
-    return '';
-  }
-
-  static void _saveCookiesForWeb(Headers headers) {
-    // تطبيق منطق حفظ الكوكيز للويب
   }
 }

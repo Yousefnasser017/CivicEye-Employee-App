@@ -1,5 +1,5 @@
 class EmployeeModel {
-  final int id;
+  late final int id;
   final String nationalId;
   final String firstName;
   final String lastName;
@@ -23,7 +23,7 @@ class EmployeeModel {
     required this.level,
   });
 
-  factory EmployeeModel.fromJson(Map<String, dynamic> json) {
+  factory EmployeeModel.fromJson( json) {
     return EmployeeModel(
       id: json['id'] ?? 0,
       nationalId: json['nationalId'] ?? '',
