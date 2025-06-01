@@ -1,3 +1,4 @@
+import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:dio/dio.dart';
 import 'package:civiceye/core/api/api_constants.dart';
 import 'package:civiceye/core/api/dio_consumer.dart';
@@ -7,11 +8,17 @@ import 'package:civiceye/models/report_model.dart';
 
 class ReportApi {
   static final Dio _dio = DioConsumer.dio;
+  Future<void> loadEmployeeId() async {
+    final employee = await LocalStorageHelper.getEmployee();
+    if (employee != null) {
+      
+    }
+  }
 
   /// Fetch reports assigned to the given employee
-  static Future<List<ReportModel>> getReportsByEmployee(int employeeId) async {
+  static Future<List<ReportModel>> getReportsByEmployee(int employee) async {
     try {
-      final response = await _dio.get(ApiConstants.reports(employeeId));
+      final response = await _dio.get(ApiConstants.reports(employee));
 
       if (response.statusCode == 200) {
         final data = response.data as List;

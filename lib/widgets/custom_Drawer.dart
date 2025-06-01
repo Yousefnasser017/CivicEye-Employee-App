@@ -4,6 +4,7 @@ import 'package:civiceye/core/themes/app_colors.dart';
 import 'package:civiceye/cubits/auth_cubit/auth_cubit.dart';
 import 'package:civiceye/cubits/auth_cubit/auth_state.dart';
 import 'package:civiceye/cubits/theme_cubit/theme_cubit.dart';
+import 'package:civiceye/screens/sign_in.dart';
 import 'package:civiceye/widgets/SnackbarHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,10 +27,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
   }
 
   Future<void> loadUsername() async {
-    final data = await LocalStorageHelper.readEmployeeData();
-    setState(() {
-      fullName = data['fullName'] ?? 'غير معروف';
-    });
+    final data = await LocalStorageHelper.getEmployee();
+    if (data != null) {
+      setState(() {
+        fullName = data.fullName;
+      });
+    }
   }
 
   @override
@@ -42,7 +45,13 @@ class _CustomDrawerState extends State<CustomDrawer> {
             'تم تسجيل الخروج بنجاح',
             type: SnackBarType.success,
           );
-          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+          // Clear the local storage
+          LocalStorageHelper.clearAll();
+          Future.delayed(const Duration(seconds: 3), () {
+            // Navigate to the login screen
+            Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+          });
+          
         } else if (state is LogoutFailure) {
           SnackBarHelper.show(
             context,
@@ -195,10 +204,17 @@ class _CustomDrawerState extends State<CustomDrawer> {
               'تأكيد',
               style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 255, 17, 0)),
             ),
-            onPressed: () {
-              AuthApi.logout(context);
-              Navigator.pop(context); // يغلق الـ dialog
-            },
+            onPressed: () async {
+                final success = await AuthApi.logout();
+                if (!mounted) return; // حماية من الخطأ
+                if (success) {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) =>  LoginScreen()),
+                    (route) => false,
+                  );
+                  
+                }
+              }
           ),
         ],
       ),

@@ -1,8 +1,9 @@
 import 'package:civiceye/core/routing/app_roution.dart';
 import 'package:civiceye/core/themes/app_theme.dart';
+import 'package:civiceye/cubits/home_cubit/home_cubit.dart';
+import 'package:civiceye/cubits/report_cubit/report_detail_cubit.dart';
 import 'package:civiceye/cubits/theme_cubit/theme_cubit.dart';
 import 'package:civiceye/cubits/auth_cubit/auth_cubit.dart';
-import 'package:civiceye/cubits/home_cubit/home_cubit.dart';
 import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -48,7 +49,9 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => LoginCubit(formKey: _formKey, emailController: _emailController, passwordController: _passwordController)),
         BlocProvider(create: (_) => ThemeCubit()),
         BlocProvider(create: (_) => ReportsCubit()),
-        BlocProvider(create: (_) => HomeCubit()),
+        BlocProvider(create: (_) => ReportDetailCubit()),
+        BlocProvider(create: (_) => ReportCubit())
+       
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>( // تغيير هنا لمتابعة ThemeMode
         builder: (context, themeMode) { // هنا نتابع themeMode مباشرة من ThemeCubit

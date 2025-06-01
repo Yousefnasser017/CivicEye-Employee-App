@@ -14,6 +14,8 @@ class CustomBottomNavBar extends StatelessWidget {
     return BottomNavigationBar(
       currentIndex: currentIndex,
       onTap: onTap,
+      type: BottomNavigationBarType.fixed,
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       selectedItemColor:AppColors.primary ,
       unselectedItemColor:isDarkMode ? Colors.white : const Color.fromARGB(255, 73, 73, 73),
       items: const [

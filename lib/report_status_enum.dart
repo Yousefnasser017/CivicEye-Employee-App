@@ -1,41 +1,56 @@
+import 'package:flutter/material.dart';
+
 enum ReportStatus {
-  submitted,
-  inProgress,
-  onHold,
-  resolved,
-  closed,
+  Submitted,
+  In_Progress,
+  On_Hold,
+  Resolved,
+  Cancelled,
 }
 
 extension ReportStatusExtension on ReportStatus {
-  String get name {
+  String get label {
     switch (this) {
-      case ReportStatus.submitted:
-        return 'Submitted';
-      case ReportStatus.inProgress:
-        return 'In Progress';
-      case ReportStatus.onHold:
-        return 'On Hold';
-      case ReportStatus.resolved:
-        return 'Resolved';
-      case ReportStatus.closed:
-        return 'Closed';
+      case ReportStatus.Submitted:
+        return 'تم الاستلام';
+      case ReportStatus.In_Progress:
+        return 'قيد التنفيذ';
+      case ReportStatus.On_Hold:
+        return 'قيد الانتظار';
+      case ReportStatus.Resolved:
+        return 'تم الحل';
+      case ReportStatus.Cancelled:
+        return 'تم الإلغاء';
     }
   }
 
-  static ReportStatus? fromString(String value) {
-    switch (value.toLowerCase()) {
-      case 'submitted':
-        return ReportStatus.submitted;
-      case 'in progress':
-        return ReportStatus.inProgress;
-      case 'on hold':
-        return ReportStatus.onHold;
-      case 'resolved':
-        return ReportStatus.resolved;
-      case 'closed':
-        return ReportStatus.closed;
-      default:
-        return null;
+  Color get color {
+    switch (this) {
+      case ReportStatus.Submitted:
+        return Colors.blue;
+      case ReportStatus.In_Progress:
+        return Colors.orange;
+      case ReportStatus.On_Hold:
+        return Colors.amber;
+      case ReportStatus.Resolved:
+        return Colors.green;
+      case ReportStatus.Cancelled:
+        return Colors.red;
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case ReportStatus.Submitted:
+        return Icons.markunread;
+      case ReportStatus.In_Progress:
+        return Icons.timelapse;
+      case ReportStatus.On_Hold:
+        return Icons.pause_circle_filled;
+      case ReportStatus.Resolved:
+        return Icons.check_circle;
+      case ReportStatus.Cancelled:
+        return Icons.cancel;
     }
   }
 }

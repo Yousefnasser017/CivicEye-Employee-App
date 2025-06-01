@@ -72,8 +72,8 @@ Future<void> login(String email, String password) async {
   }
   Future<void> logout() async {
     try {
-      final username = await _storage.read(key: 'username');
-      await AuthApi.logout(username as BuildContext);
+      
+      await AuthApi.logout();
       await _storage.deleteAll();
       emit(LoginInitial());
     } catch (e) {

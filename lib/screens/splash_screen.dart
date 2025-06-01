@@ -35,7 +35,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       CurvedAnimation(parent: _controller, curve: Curves.easeIn),
     );
 
-    _positionAnimation = Tween<Offset>(begin: Offset(0, 1), end: Offset(0, 0))
+    _positionAnimation = Tween<Offset>(begin: const Offset(0, 1), end: const Offset(0, 0))
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     // نبدأ الأنيميشن ببطء
@@ -105,7 +105,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 BlocBuilder<SplashCubit, SplashState>(
                   builder: (context, state) {
                     if (state is SplashInitial) {
-                      return CircularProgressIndicator();
+                      return const CircularProgressIndicator();
                     }
                     return Container();  // لا شيء يظهر إذا لم تكن في حالة تحميل
                   },

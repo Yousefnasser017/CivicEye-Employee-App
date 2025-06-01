@@ -1,57 +1,51 @@
-// home_cubit.dart
 import 'package:civiceye/core/api/report_service.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:civiceye/core/storage/cache_helper.dart';
+import 'package:civiceye/cubits/home_cubit/home_state.dart';
 import 'package:civiceye/models/report_model.dart';
-import 'package:civiceye/core/error/exceptions.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:collection/collection.dart';
 
-part 'home_state.dart';
+class ReportCubit extends Cubit<ReportState> {
 
-class HomeCubit extends Cubit<HomeState> {
-  HomeCubit() : super(HomeInitial());
+  ReportCubit() : super(ReportState.initial());
 
-  final _storage = const FlutterSecureStorage();
-
-  Future<void> loadDashboardData() async {
-    emit(HomeLoading());
-
+  Future<void> fetchReports() async {
     try {
-      final empId = int.parse(await _storage.read(key: 'employeeId') ?? '0');
-      final reports = await ReportApi.getReportsByEmployee(empId);
+      emit(state.copyWith(status: ReportStatus.loading));
 
-      final pendingCount = reports.where((r) => r.currentStatus == 'معلق').length;
-      final resolvedCount = reports.where((r) => r.currentStatus == 'تم الحل').length;
-      final todayCount = reports.where((r) =>
-        r.createdAt.day == DateTime.now().day &&
-        r.createdAt.month == DateTime.now().month &&
-        r.createdAt.year == DateTime.now().year).length;
+      final employee = await LocalStorageHelper.getEmployee();  // جلب ID الموظف من الذاكرة
+      final reports = await ReportApi.getReportsByEmployee(employee?.id ?? 0);
 
-      ReportModel? current;
-      try {
-        current = reports.firstWhere((r) => r.currentStatus == 'قيد التنفيذ');
-      } catch (_) {
-        current = null;
-      }
+      // حساب الإحصائيات
+      int submittedCount = reports.where((report) => report.currentStatus == 'Submitted').length;
+      int inProgressCount = reports.where((report) => report.currentStatus == 'In_Progress').length;
+      int resolvedCount = reports.where((report) => report.currentStatus == 'Resolved').length;
 
-      emit(HomeLoaded(
-        pendingCount: pendingCount,
+      // تحديد البلاغ الجاري
+      ReportModel? currentReport = reports.firstWhereOrNull((report) => report.currentStatus == 'In_Progress');
+
+      emit(state.copyWith(
+        reports: reports,
+        submittedCount: submittedCount,
+        inProgressCount: inProgressCount,
         resolvedCount: resolvedCount,
-        todayCount: todayCount,
-        currentReport: current,
+        currentReport: currentReport,
+        status: ReportStatus.success,
       ));
     } catch (e) {
-      emit(HomeError(ExceptionHandler.handle(e)));
+      emit(state.copyWith(status: ReportStatus.failure, errorMessage: e.toString()));
     }
   }
 
-  Future<void> updateStatus(int reportId, String newStatus) async {
-    emit(HomeLoading());
+  Future<void> updateReportStatus(int reportId, String newStatus, String? notes) async {
     try {
-      final empId = int.parse(await _storage.read(key: 'employeeId') ?? '0');
-      await ReportApi.updateStatus(reportId, newStatus, empId);
-      await loadDashboardData();
+      final employee = await LocalStorageHelper.getEmployee();
+      await ReportApi.updateStatus(reportId, newStatus, employee?.id ?? 0, notes: notes);
+
+      emit(state.copyWith(status: ReportStatus.success));
+      fetchReports(); 
     } catch (e) {
-      emit(HomeError(ExceptionHandler.handle(e)));
+      emit(state.copyWith(status: ReportStatus.failure, errorMessage: e.toString()));
     }
   }
 }

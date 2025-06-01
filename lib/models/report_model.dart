@@ -23,23 +23,21 @@ class ReportModel {
     this.cityName,
   });
 
-  // Factory constructor to create an instance from JSON
-  factory ReportModel.fromJson( json) {
-    return ReportModel(
-      reportId: json['reportId'],
-      title: json['title'] ?? '',
-      description: json['description'],
-      latitude: json['latitude']?.toDouble(),
-      longitude: json['longitude']?.toDouble(),
-      contactInfo: json['contactInfo'],
-      department: json['department'] ?? '',
-      createdAt: DateTime.parse(json['createdAt']),
-      currentStatus: json['currentStatus'] ?? '',
-      cityName: json['cityName'],
-    );
-  }
-
-  // Method to convert the object to JSON
+  factory ReportModel.fromJson(Map<String, dynamic> json) {
+  return ReportModel(
+    reportId: json['reportId'] is int ? json['reportId'] : int.tryParse(json['reportId'].toString()) ?? 0,
+    title: json['title'] ?? '',  // استخدم القيمة الافتراضية إذا كانت null
+    description: json['description'],
+    latitude: json['latitude']?.toDouble(),
+    longitude: json['longitude']?.toDouble(),
+    contactInfo: json['contactInfo'],
+    department: json['department'] ?? '',  // تأكد من وجود القيمة
+    createdAt: DateTime.parse(json['createdAt']),
+    currentStatus: json['currentStatus'] ?? '',  // استخدم القيمة الافتراضية إذا كانت null
+    cityName: json['cityName'],
+  );
+}
+  // دالة toJson لتحويل الكائن إلى JSON
   Map<String, dynamic> toJson() {
     return {
       'reportId': reportId,
@@ -54,6 +52,40 @@ class ReportModel {
       'cityName': cityName,
     };
   }
+
+  // ✅ دالة copyWith داخل ReportModel
+  ReportModel copyWith({
+    int? reportId,
+    String? title,
+    String? description,
+    double? latitude,
+    double? longitude,
+    String? contactInfo,
+    String? department,
+    DateTime? createdAt,
+    String? currentStatus,
+    String? cityName,
+  }) {
+    return ReportModel(
+      reportId: reportId ?? this.reportId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      contactInfo: contactInfo ?? this.contactInfo,
+      department: department ?? this.department,
+      createdAt: createdAt ?? this.createdAt,
+      currentStatus: currentStatus ?? this.currentStatus,
+      cityName: cityName ?? this.cityName,
+    );
+  }
+ factory ReportModel.empty() => ReportModel(
+      reportId: 0,
+      title: '',
+      department: '',
+      createdAt: DateTime.now(),
+      currentStatus: '',
+ );
 }
 
 class UpdateReportStatus {
@@ -88,4 +120,10 @@ class UpdateReportStatus {
       'reportId': reportId,
     };
   }
+
+  
 }
+
+
+
+

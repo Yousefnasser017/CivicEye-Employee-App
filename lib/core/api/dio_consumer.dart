@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 class DioConsumer {
   static final Dio _dio = Dio()
     ..options.baseUrl = 'http://localhost:8000' // استبدل بـ URL الخاص بـ API الخاص بك
-    ..options.connectTimeout = const Duration(seconds: 10)
-    ..options.receiveTimeout = const Duration(seconds: 10)
+    ..options.connectTimeout = const Duration(seconds: 20)
+    ..options.receiveTimeout = const Duration(seconds: 20)
     ..options.extra['withCredentials'] = true; // يفعّل إرسال واستقبال الكوكيز (مهم جداً لـ Flutter Web)
 
   static Dio get dio {

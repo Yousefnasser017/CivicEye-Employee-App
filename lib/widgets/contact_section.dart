@@ -1,35 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class ContactSection extends StatelessWidget {
-  final String phoneNumber;
+class CallConfirmationDialog extends StatelessWidget {
+  final String phone;
 
-  const ContactSection({super.key, required this.phoneNumber});
+  const CallConfirmationDialog({super.key, required this.phone});
 
-  Future<void> _requestPermission(BuildContext context) async {
-    PermissionStatus status = await Permission.phone.request();
-    if (status.isGranted) {
-      final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
-      if (await canLaunchUrl(phoneUri)) {
-        await launchUrl(phoneUri);
-      }
+  Future<void> _launchCaller(BuildContext context) async {
+    final Uri callUri = Uri(scheme: 'tel', path: phone);
+    if (await canLaunchUrl(callUri)) {
+      await launchUrl(callUri);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم رفض إذن الاتصال')),
+        const SnackBar(content: Text("لا يمكن فتح تطبيق الاتصال")),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Text('رقم المبلغ: ', style: TextStyle(fontWeight: FontWeight.bold)),
-        Text(phoneNumber, style: const TextStyle(color: Colors.blue)),
-        IconButton(
-          icon: const Icon(Icons.phone),
-          onPressed: () => _requestPermission(context),
+    return AlertDialog(
+      title: const Text("الاتصال"),
+      content: Text("هل تريد الاتصال على الرقم: $phone؟"),
+      actions: [
+        TextButton(
+          child: const Text("إلغاء"),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        TextButton(
+          child: const Text("اتصال"),
+          onPressed: () async {
+            Navigator.of(context).pop();
+            await _launchCaller(context);
+          },
         ),
       ],
     );

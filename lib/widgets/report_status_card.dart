@@ -1,32 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:civiceye/models/report_model.dart';
+import 'package:civiceye/core/themes/app_colors.dart';
 
-class ReportStatusCard extends StatelessWidget {
-  final List<ReportModel> reports;
+class StatsCard extends StatelessWidget {
+  final String title;
+  final int count;
+  final String statusKey;
+  final VoidCallback onTap;
 
-  ReportStatusCard({required this.reports});
+  const StatsCard({
+    super.key,
+    required this.title,
+    required this.count,
+    required this.statusKey,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,  // لضمان عدم تجاوز المساحة
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 3/2, // لضبط شكل الكارد
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: MediaQuery.of(context).size.width / 2 - 20,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.primary),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title,
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('$count بلاغ',
+                style: const TextStyle(fontSize: 14, color: Colors.grey)),
+          ],
+        ),
       ),
-      itemCount: reports.length,
-      itemBuilder: (context, index) {
-        final report = reports[index];
-        return Card(
-          child: ListTile(
-            title: Text(report.currentStatus),
-            subtitle: Text('عدد البلاغات: ${reports.where((r) => r.currentStatus == report.currentStatus).length}'),
-            onTap: () {
-              // يمكنك هنا التوجه لصفحة البلاغات مع فلترة حسب الحالة
-            },
-          ),
-        );
-      },
     );
   }
 }

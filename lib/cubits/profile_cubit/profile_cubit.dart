@@ -18,12 +18,18 @@ class ProfileCubit extends Cubit<ProfileState> {
       final cityName = await _storage.read(key: 'cityName') ?? '';
       final governorateName = await _storage.read(key: 'governorateName') ?? '';
       final email = await _storage.read(key: 'username') ?? '';
-      final empId = int.tryParse(await _storage.read(key: 'employeeId') ?? '0') ?? 0;
+      final empId =
+          int.tryParse(await _storage.read(key: 'employeeId') ?? '0') ?? 0;
+
+      // Print values to debug
+      print('City: $cityName, Governorate: $governorateName');
+      print('Address: $cityName - $governorateName');
 
       // Fetch reports for progress calculation
       final reports = await ReportApi.getReportsByEmployee(empId);
       final totalReports = reports.length;
-      final solvedReports = reports.where((r) => r.currentStatus == "Resolved").length;
+      final solvedReports =
+          reports.where((r) => r.currentStatus == "Resolved").length;
       final progress = totalReports > 0 ? solvedReports / totalReports : 0.0;
 
       emit(ProfileLoaded(
@@ -36,7 +42,7 @@ class ProfileCubit extends Cubit<ProfileState> {
         totalReports: totalReports,
       ));
     } catch (e) {
-      emit(ProfileError( 'Failed to load profile data.'));
+      emit(ProfileError('Failed to load profile data.'));
     }
   }
 }
