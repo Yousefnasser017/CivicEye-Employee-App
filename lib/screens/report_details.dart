@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:civiceye/cubits/report_cubit/report_detail_state.dart';
 import 'package:civiceye/models/report_model.dart';
-import 'package:civiceye/report_status_enum.dart';
+import 'package:civiceye/models/report_status_enum.dart';
 import 'package:civiceye/screens/map_screen.dart';
 import 'package:civiceye/widgets/contact_section.dart';
 import 'package:civiceye/widgets/show_update_status_dialog.dart';
@@ -113,8 +113,6 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                           }
                         },
                       ),
-
-                      // كارد الحالة المعدل
                       Card(
                         elevation: 3,
                         color: isDarkMode ? Colors.grey[800] : Colors.white,

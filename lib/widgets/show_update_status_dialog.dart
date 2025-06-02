@@ -1,9 +1,11 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:civiceye/models/report_model.dart';
 import 'package:civiceye/cubits/report_cubit/report_detail_cubit.dart';
 import 'package:civiceye/cubits/report_cubit/report_detail_state.dart';
-import 'package:civiceye/report_status_enum.dart'; // يحتوي على enum والتوسعة الجديدة
+import 'package:civiceye/models/report_status_enum.dart';
 
 class UpdateStatusDialog {
   static Future<void> show({
@@ -76,11 +78,12 @@ class UpdateStatusDialog {
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.grey[100],
+                        color: isDarkMode ? Colors.black : Colors.white,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: DropdownButton<ReportStatus>(
+                        dropdownColor:  isDarkMode ? Colors.black : Colors.white,
                         isExpanded: true,
                         value: selectedStatus,
                         icon: const Icon(Icons.arrow_drop_down),
@@ -119,8 +122,11 @@ class UpdateStatusDialog {
                       controller: notesController,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: Colors.grey[100],
+                        fillColor: isDarkMode? Colors.black: Colors.white,
                         hintText: 'أدخل ملاحظاتك هنا...',
+                        hintStyle: TextStyle(
+                          color: isDarkMode ? Colors.white70 : Colors.black54,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,
@@ -159,7 +165,7 @@ class UpdateStatusDialog {
                                       cubit.updateReportStatus(
                                         report,
                                         selectedStatus
-                                            .name, // ✅ يتم إرسال الاسم الإنجليزي فقط
+                                            .name, 
                                         notesController.text.trim(),
                                       );
                                     },

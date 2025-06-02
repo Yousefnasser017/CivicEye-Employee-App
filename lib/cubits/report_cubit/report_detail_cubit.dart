@@ -2,7 +2,7 @@ import 'package:civiceye/core/api/report_service.dart';
 import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:civiceye/cubits/report_cubit/report_detail_state.dart';
 import 'package:civiceye/models/report_model.dart';
-import 'package:civiceye/report_status_enum.dart';
+import 'package:civiceye/models/report_status_enum.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 

@@ -21,11 +21,7 @@ class LoginFailure extends LoginState {
 
 class LogoutInProgress extends LoginState {}
 
-class LogoutSuccess extends LoginState {
-  LogoutSuccess(void print);
-
-
-}
+class LogoutSuccess extends LoginState {}
 
 class LogoutFailure extends LoginState {
   final String errorMessage;

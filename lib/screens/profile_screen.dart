@@ -3,6 +3,7 @@ import 'package:civiceye/cubits/profile_cubit/profile_cubit.dart';
 import 'package:civiceye/widgets/custom_AppBar.dart';
 import 'package:civiceye/widgets/custom_Drawer.dart';
 import 'package:civiceye/widgets/custom_bottomNavBar.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:animate_do/animate_do.dart';
@@ -16,9 +17,6 @@ class ProfileScreen extends StatelessWidget {
       create: (_) => ProfileCubit()..loadProfile(),
       child: BlocBuilder<ProfileCubit, ProfileState>(
         builder: (context, state) {
-          final theme = Theme.of(context);
-          final isDark = theme.brightness == Brightness.dark;
-          final textTheme = theme.textTheme;
 
           if (state is ProfileLoading) {
             return const Scaffold(
@@ -37,86 +35,38 @@ class ProfileScreen extends StatelessWidget {
                   if (index == 1) Navigator.pushReplacementNamed(context, '/reports');
                 },
               ),
-              body:SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      FadeInDown(
-                        duration: const Duration(milliseconds: 600),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            gradient: LinearGradient(
-                              colors: isDark
-                                  ? [Colors.grey[900]!, Colors.grey[800]!]
-                                  : [theme.primaryColor, theme.primaryColor.withOpacity(0.8)],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                state.fullName,
-                                style: textTheme.bodyLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-                              ),
-                              const SizedBox(height: 20),
-                              LinearProgressIndicator(
-                                value: state.progress,
-                                backgroundColor: const Color.fromARGB(219, 248, 248, 248),
-                                color: Colors.white,
-                                minHeight: 6,
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                state.progress == 0
-                                    ? "لم تقم بحل أي بلاغ بعد."
-                                    : 'نسبة الإنجاز: ${(state.progress * 100).toStringAsFixed(1)}% (${state.solvedReports}/${state.totalReports})',
-                                style: textTheme.bodyMedium?.copyWith(color: const Color.fromARGB(240, 255, 255, 255), fontWeight: FontWeight.w500, fontSize: 16),
-                              ),
-                            ],
-                          ),
-                        ),
+              body: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    FadeInUp(
+                      delay: const Duration(milliseconds: 300),
+                      child: _buildCard(Icons.person, "الاسم الكامل", state.fullName, context),
+                    ),
+                    const SizedBox(height: 16),
+                    FadeInUp(
+                      delay: const Duration(milliseconds: 400),
+                      child: _buildCard(Icons.email_outlined, "البريد الإلكتروني", state.email, context),
+                    ),
+                    const SizedBox(height: 16),
+                    FadeInUp(
+                      delay: const Duration(milliseconds: 500),
+                      child: _buildCard(Icons.location_on_outlined, "العنوان", state.address, context),
+                    ),
+                    const SizedBox(height: 16),
+                    FadeInUp(
+                      delay: const Duration(milliseconds: 600),
+                      child: _buildCard(
+                        _getIconForDepartment(state.department),
+                        "القسم", 
+                        state.department, 
+                        context,
                       ),
-                      const SizedBox(height: 30),
-                      FadeInUp(
-                        delay: const Duration(milliseconds: 300),
-                        child: _buildCard(Icons.person, "الاسم الكامل", state.fullName, context),
-                      ),
-                      const SizedBox(height: 16),
-                      FadeInUp(
-                        delay: const Duration(milliseconds: 400),
-                        child: _buildCard(Icons.email_outlined, "البريد الإلكتروني", state.email, context),
-                      ),
-                      const SizedBox(height: 16),
-                      FadeInUp(
-                        delay: const Duration(milliseconds: 500),
-                        child: _buildCard(Icons.location_on_outlined, "العنوان", state.address, context),
-                      ),
-                      const SizedBox(height: 16),
-                      FadeInUp(
-                        delay: const Duration(milliseconds: 600),
-                        child: _buildCard(
-                          _getIconForDepartment(state.department), // الأيقونة الافتراضية
-                          "القسم", 
-                          state.department, 
-                          context,
-                           // إضافة قيمة القسم
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
               );
             
           }
@@ -128,6 +78,7 @@ class ProfileScreen extends StatelessWidget {
                 body: Center(
                   child: ElevatedButton(
                     onPressed: () {
+                      
                       context.read<ProfileCubit>().loadProfile(); // هذا سيعمل طالما نحن داخل BlocProvider
                     },
                     child: const Text('إعادة تحميل البيانات'),
@@ -188,7 +139,7 @@ class ProfileScreen extends StatelessWidget {
         return Icons.phone;
       case 'Housing and Utilities':
         return Icons.house;
-      case 'Administrative Complaints':
+      case 'Administrative_Complaints_and_Customer_Service':
         return Icons.headset_mic;
       default:
       print("Returning Default Icon: Icons.business");

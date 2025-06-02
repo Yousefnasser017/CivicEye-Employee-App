@@ -12,17 +12,15 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       textDirection: TextDirection.ltr,
       child: AppBar(
         backgroundColor: const Color(0xFF725DFE),
-        leadingWidth: 0, // يزيل الفراغ على اليسار
-        titleSpacing: 0, // يزيل الفراغ حول العنوان
-        title: Padding(
-          padding: const EdgeInsets.only(left: 16), // يمكن ضبطه حسب الحاجة
-          child: Image.asset(
+        leadingWidth: 0, 
+        titleSpacing: 0, 
+        title:Image.asset(
             'assets/images/logo-white.png',
             height: 60,
             fit: BoxFit.contain,
             color: Colors.white,
           ),
-        ),
+        
         actions: [
           Builder(
             builder: (context) => IconButton(

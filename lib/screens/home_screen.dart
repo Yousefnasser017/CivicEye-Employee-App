@@ -76,7 +76,7 @@ class HomeScreen extends StatelessWidget {
                             title: Text(state.inProgressReport!.title),
                             subtitle: Text(
                               'الحالة: ${ReportsCubit.statusLabels[state.inProgressReport!.currentStatus] ?? state.inProgressReport!.currentStatus}',
-                              style: const TextStyle(color: Colors.grey),
+                              style: const TextStyle(color: Color.fromARGB(255, 75, 75, 75)),
                             ),
                             trailing: IconButton(
                               icon: const Icon(Icons.edit,
@@ -105,7 +105,7 @@ class HomeScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
                           'لا يوجد بلاغ جاري حالياً',
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color:  Color.fromARGB(255, 65, 65, 65)),
                         ),
                       ),
 
@@ -124,7 +124,7 @@ class HomeScreen extends StatelessWidget {
                         spacing: 8,
                         runSpacing: 8,
                         children:
-                            state.reportCountsByStatus.entries.map((entry) {
+                            state.reportCountsByStatus.entries.where((entry) => entry.key != 'Cancelled').map((entry) {
                           return StatsCard(
                             statusKey: entry.key,
                             title: ReportsCubit.statusLabels[entry.key] ??
@@ -169,7 +169,7 @@ class HomeScreen extends StatelessWidget {
                                 title: Text(report.title),
                                 subtitle: Text(
                                   'الحالة: ${ReportsCubit.statusLabels[report.currentStatus] ?? report.currentStatus}',
-                                  style: const TextStyle(color: Colors.grey),
+                                  style: const TextStyle(color: Color.fromARGB(255, 65, 65, 65)),
                                 ),
                                 onTap: () {
                                   Navigator.push(
@@ -196,7 +196,7 @@ class HomeScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
                           'لا توجد بلاغات حديثة حالياً.',
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: Color.fromARGB(255, 65, 65, 65)),
                         ),
                       ),
 

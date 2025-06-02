@@ -17,6 +17,8 @@ class StatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -24,19 +26,21 @@ class StatsCard extends StatelessWidget {
         width: MediaQuery.of(context).size.width / 2 - 20,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
+          color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.primary),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(title,
                 style:
                     const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text('$count بلاغ',
-                style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                style:  TextStyle(fontSize: 16,  fontWeight: FontWeight.bold, color: isDarkMode? const Color.fromARGB(255, 255, 255, 255)
+                        : Color.fromARGB(255, 66, 66, 66))),
           ],
         ),
       ),

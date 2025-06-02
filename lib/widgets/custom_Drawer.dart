@@ -1,8 +1,11 @@
-import 'package:civiceye/core/api/login_service.dart';
+
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:civiceye/core/themes/app_colors.dart';
 import 'package:civiceye/cubits/auth_cubit/auth_cubit.dart';
 import 'package:civiceye/cubits/auth_cubit/auth_state.dart';
+import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
 import 'package:civiceye/cubits/theme_cubit/theme_cubit.dart';
 import 'package:civiceye/screens/sign_in.dart';
 import 'package:civiceye/widgets/SnackbarHelper.dart';
@@ -46,11 +49,11 @@ class _CustomDrawerState extends State<CustomDrawer> {
             type: SnackBarType.success,
           );
           // Clear the local storage
-          LocalStorageHelper.clearAll();
-          Future.delayed(const Duration(seconds: 3), () {
-            // Navigate to the login screen
-            Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-          });
+          // LocalStorageHelper.clearAll();
+          // Future.delayed(const Duration(seconds: 3), () {
+          //   // Navigate to the login screen
+          //   Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+          // });
           
         } else if (state is LogoutFailure) {
           SnackBarHelper.show(
@@ -153,7 +156,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
   Widget _buildThemeSwitch(BuildContext context) {
     return SwitchListTile(
-      title: const Text('الوضع الداكن'),
+      title: const Text('الوضع المظلم'),
       secondary: const Icon(Icons.dark_mode),
       value: isDarkMode,
       onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
@@ -184,7 +187,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
           ),
         ),
         content: Text(
-          'هل تريد تسجيل الخروج؟',
+          'هل تاكيد تسجيل الخروج؟',
           style: TextStyle(
             fontSize: 16,
             color: isDarkMode ? Colors.white : Colors.black,
@@ -204,16 +207,17 @@ class _CustomDrawerState extends State<CustomDrawer> {
               'تأكيد',
               style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 255, 17, 0)),
             ),
-            onPressed: () async {
-                final success = await AuthApi.logout();
-                if (!mounted) return; // حماية من الخطأ
-                if (success) {
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) =>  LoginScreen()),
-                    (route) => false,
-                  );
-                  
-                }
+           onPressed: () async {
+                final cubit = context.read<LoginCubit>();
+                await cubit.logout();
+                context.read<ReportsCubit>().clear();
+
+                if (!context.mounted) return;
+
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => LoginScreen()),
+                  (route) => false,
+                );
               }
           ),
         ],

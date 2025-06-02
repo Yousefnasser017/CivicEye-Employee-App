@@ -18,7 +18,13 @@ class ReportApi {
   /// Fetch reports assigned to the given employee
   static Future<List<ReportModel>> getReportsByEmployee(int employee) async {
     try {
-      final response = await _dio.get(ApiConstants.reports(employee));
+      await LocalStorageHelper.getEmployee();
+      final response = await _dio.get(
+        ApiConstants.reports(employee),
+        options: Options(
+          extra: {'withCredentials': true}, // ✅ مهم جدًا
+        ),
+      );
 
       if (response.statusCode == 200) {
         final data = response.data as List;
@@ -53,6 +59,12 @@ class ReportApi {
           'employeeId': employeeId,
           'notes': notes ?? '',
         },
+        options: Options(
+          extra: {'withCredentials': true}, // ✅
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
       );
 
       if (response.statusCode != 200) {

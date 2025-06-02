@@ -1,6 +1,7 @@
 import 'package:civiceye/models/user_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class LocalStorageHelper {
@@ -21,26 +22,26 @@ class LocalStorageHelper {
       _storage.write(key: 'department', value: employee.department),
       _storage.write(key: 'cityName', value: employee.cityName),
       _storage.write(key: 'governorateName', value: employee.governorateName),
-      _storage.write(key: 'username', value: employee.nationalId),
+      _storage.write(key: 'nationalId', value: employee.nationalId),
     ]);
   }
 
   /// Get full employee model
   static Future<EmployeeModel?> getEmployee() async {
-    final idStr = await _storage.read(key: 'employeeId');
-    if (idStr == null) return null;
+    final id = await _storage.read(key: 'employeeId');
+    if (id == null) return null;
 
     return EmployeeModel(
-      id: int.tryParse(idStr) ?? 0,
-      nationalId: await _storage.read(key: 'username') ?? '',
-      firstName: '', // يمكن إضافتها لاحقًا حسب الحاجة
+      id: int.tryParse(id) ?? 0,
+      nationalId: await _storage.read(key: 'nationalId') ?? '',
+      firstName: '', 
       lastName: '',
       fullName: await _storage.read(key: 'fullName') ?? '',
       email: await _storage.read(key: 'email') ?? '',
       department: await _storage.read(key: 'department') ?? '',
       cityName: await _storage.read(key: 'cityName') ?? '',
       governorateName: await _storage.read(key: 'governorateName') ?? '',
-      level: [], // تخزين واسترجاع level ممكن يتم لاحقًا إذا احتجته
+      level: [],
     );
   }
 
@@ -62,6 +63,11 @@ class LocalStorageHelper {
   }
 
   static Future<void> clearAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
     await _storage.deleteAll();
+    print(' Storage cleared!');
   }
+
+
 }

@@ -23,7 +23,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     super.initState();
 
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1200), // مدة الأنيميشن
+      duration: const Duration(milliseconds: 1200), 
       vsync: this,
     );
 
@@ -38,18 +38,15 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _positionAnimation = Tween<Offset>(begin: const Offset(0, 1), end: const Offset(0, 0))
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    // نبدأ الأنيميشن ببطء
+
     _controller.forward().then((_) {
-      // التأخير هنا لمنع الاختفاء السريع
       Future.delayed(const Duration(seconds: 1), () {
-        // بعد الأنيميشن، نعرض اسم التطبيق
         setState(() {
           opacity = 1.0;
         });
       });
     });
 
-    // تحديث عداد النقاط بين الحين والآخر
     Timer.periodic(const Duration(milliseconds: 500), (timer) {
       if (mounted) {
         setState(() {
@@ -87,7 +84,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // حركة الصورة من أسفل إلى المنتصف
                 SlideTransition(
                   position: _positionAnimation,
                   child: FadeTransition(
@@ -107,7 +103,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     if (state is SplashInitial) {
                       return const CircularProgressIndicator();
                     }
-                    return Container();  // لا شيء يظهر إذا لم تكن في حالة تحميل
+                    return Container();  
                   },
                 ),
               ],

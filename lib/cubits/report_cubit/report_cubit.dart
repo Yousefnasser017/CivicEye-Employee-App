@@ -11,13 +11,13 @@ class ReportsCubit extends Cubit<ReportsState> {
   bool _hasMore = true;
   final int _perPage = 10;
 
-  List<String> statusFilters = [
+  final List<String> statusFilters = [
     'All',
     'Submitted',
     'In_Progress',
     'On_Hold',
     'Resolved',
-    'Cancelled'
+    'Cancelled',
   ];
 
   static const Map<String, String> statusLabels = {
@@ -26,25 +26,36 @@ class ReportsCubit extends Cubit<ReportsState> {
     'In_Progress': 'قيد التنفيذ',
     'On_Hold': 'قيد الانتظار',
     'Resolved': 'تم الحل',
-    'Cancelled':'تم الالغاء' , 
+    'Cancelled': 'تم الإلغاء',
   };
 
   String selectedStatus = 'All';
   List<ReportModel> _allReports = [];
+
   int? get employeeId => _employeeId;
 
-  // تحميل ID الموظف
+  // تحميل رقم الموظف من التخزين المحلي
+
   Future<void> _loadEmployeeId() async {
     final employee = await LocalStorageHelper.getEmployee();
     _employeeId = employee?.id;
   }
+  void clear() {
+    _employeeId = null;
+    _allReports.clear();
+    _hasMore = true;
+    selectedStatus = 'All';
+    emit(ReportsInitial());
+  }
 
-  // جلب البلاغات
+  // جلب البلاغات كاملة من API وتطبيق الفلاتر المحلية
   Future<void> getReports() async {
     try {
-      emit(ReportsLoading(report: []));  // حالة التحميل
+      emit(ReportsLoading(report: []));
 
-      if (_employeeId == null) await _loadEmployeeId();
+     
+        await _loadEmployeeId();
+      
       if (_employeeId == null) {
         emit(ReportsError(message: 'لم يتم العثور على هوية الموظف'));
         return;
@@ -62,16 +73,7 @@ class ReportsCubit extends Cubit<ReportsState> {
 
       final latestReports = _allReports.take(3).toList();
 
-      final reportCounts = {
-        for (var status in statusFilters.where((s) => s != 'All')) status: 0,
-      };
-
-      for (var report in _allReports) {
-        if (reportCounts.containsKey(report.currentStatus)) {
-          reportCounts[report.currentStatus] =
-              reportCounts[report.currentStatus]! + 1;
-        }
-      }
+      final reportCounts = _calculateReportCounts(_allReports);
 
       emit(ReportsLoaded(
         report: filtered.take(_perPage).toList(),
@@ -80,58 +82,80 @@ class ReportsCubit extends Cubit<ReportsState> {
         latestReports: latestReports,
         reportCountsByStatus: reportCounts,
       ));
-    } catch (_) {
+    } catch (e) {
       emit(ReportsError(message: 'حدث خطأ أثناء تحميل البلاغات'));
     }
   }
 
-  // تصفية البلاغات حسب الحالة
-  void filterByStatus(String status) {
+  // تطبيق فلتر الحالة على قائمة البلاغات
+  List<ReportModel> _applyFilter(List<ReportModel> allReports) {
+    if (selectedStatus == 'All') return allReports;
+    return allReports.where((r) => r.currentStatus == selectedStatus).toList();
+  }
+
+  // حساب عدد البلاغات حسب الحالة
+  Map<String, int> _calculateReportCounts(List<ReportModel> reports) {
+    final counts = <String, int>{};
+    for (var status in statusFilters) {
+      if (status != 'All') counts[status] = 0;
+    }
+    for (var report in reports) {
+      if (counts.containsKey(report.currentStatus)) {
+        counts[report.currentStatus] = counts[report.currentStatus]! + 1;
+      }
+    }
+    return counts;
+  }
+
+  // تغيير فلتر الحالة وإعادة جلب البلاغات مع الفلترة
+  Future<void> filterByStatus(String status) async {
     selectedStatus = status;
-    getReports();
+    await getReports();
   }
 
-  // تطبيق الفلتر على البلاغات
-  List<ReportModel> _applyFilter(List<ReportModel> all) {
-    if (selectedStatus == 'All') return all;
-    return all.where((r) => r.currentStatus == selectedStatus).toList();
-  }
-
-  // تحميل المزيد من البلاغات
+  // تحميل المزيد من البلاغات (Pagination)
   Future<void> loadMoreReports() async {
-    if (!_hasMore || state is ReportsLoading || state is ReportsError) return;
-
-    final currentState = state;
-    if (currentState is! ReportsLoaded) return;
+    if (!_hasMore) return;
+    if (state is! ReportsLoaded) return;
 
     try {
+      final currentState = state as ReportsLoaded;
       final filtered = _applyFilter(_allReports);
-      final current = currentState.report;
-      final nextPage = filtered.skip(current.length).take(_perPage).toList();
-      final allLoaded = [...current, ...nextPage];
+
+      final currentLength = currentState.report.length;
+      final nextItems = filtered.skip(currentLength).take(_perPage).toList();
+
+      final updatedList = [...currentState.report, ...nextItems];
+      _hasMore = filtered.length > updatedList.length;
 
       emit(ReportsLoaded(
-        report: allLoaded,
-        hasMore: filtered.length > allLoaded.length,
+        report: updatedList,
+        hasMore: _hasMore,
         inProgressReport: currentState.inProgressReport,
         latestReports: currentState.latestReports,
         reportCountsByStatus: currentState.reportCountsByStatus,
       ));
-    } catch (_) {
-      emit(ReportsError(message: 'حدث خطأ أثناء تحميل المزيد'));
+    } catch (e) {
+      emit(ReportsError(message: 'حدث خطأ أثناء تحميل المزيد من البلاغات'));
     }
   }
 
-  // تحديث حالة البلاغ
-  Future<void> updateReportStatus(int reportId, String newStatus) async {
+  // تحديث حالة البلاغ في الـ API ثم تحديث الحالة محليًا
+  Future<void> updateReportStatus({
+    required int reportId,
+    required String newStatus,
+    required String notes,
+  }) async {
     final currentState = state;
     if (currentState is! ReportsLoaded) return;
 
     try {
-      emit(ReportsLoading(report: currentState.report)); // حالة التحميل
+      emit(ReportsLoading(report: currentState.report));
 
-      await ReportApi.updateStatus(reportId, newStatus, _employeeId!);
+      await ReportApi.updateStatus(reportId, newStatus, _employeeId!,
+          notes: notes);
 
+      // تحديث القائمة محليًا
       final updatedReports = currentState.report.map((report) {
         if (report.reportId == reportId) {
           return report.copyWith(currentStatus: newStatus);
@@ -139,24 +163,13 @@ class ReportsCubit extends Cubit<ReportsState> {
         return report;
       }).toList();
 
-      // تحديث البيانات الرئيسية
       final inProgressReport = updatedReports.firstWhere(
         (r) => r.currentStatus == 'In_Progress',
         orElse: () => ReportModel.empty(),
       );
 
       final latestReports = _allReports.take(3).toList();
-
-      final reportCounts = {
-        for (var status in statusFilters.where((s) => s != 'All')) status: 0,
-      };
-
-      for (var report in _allReports) {
-        if (reportCounts.containsKey(report.currentStatus)) {
-          reportCounts[report.currentStatus] =
-              reportCounts[report.currentStatus]! + 1;
-        }
-      }
+      final reportCounts = _calculateReportCounts(_allReports);
 
       emit(ReportsLoaded(
         report: updatedReports,
@@ -165,7 +178,7 @@ class ReportsCubit extends Cubit<ReportsState> {
         latestReports: latestReports,
         reportCountsByStatus: reportCounts,
       ));
-    } catch (_) {
+    } catch (e) {
       emit(ReportsError(message: 'حدث خطأ أثناء تحديث حالة البلاغ'));
     }
   }

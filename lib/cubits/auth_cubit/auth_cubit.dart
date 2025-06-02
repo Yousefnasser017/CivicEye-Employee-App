@@ -1,7 +1,9 @@
 import 'package:civiceye/core/api/login_service.dart';
 import 'package:civiceye/core/error/api_exception.dart';
 import 'package:civiceye/core/error/exceptions.dart';
+import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:civiceye/models/sign_in_model.dart';
+import 'package:civiceye/models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -29,7 +31,7 @@ class LoginCubit extends Cubit<LoginState> {
   }
 
 Future<void> login(String email, String password) async {
-  if (email.isEmpty || password.isEmpty) {
+ if (email.trim().isEmpty || password.trim().isEmpty) {
     emit(LoginFailure('Email or password cannot be empty'));
     return;
   }
@@ -45,6 +47,7 @@ Future<void> login(String email, String password) async {
       if (loginResponse.type != 'Employee') {
         throw ApiException('ليس لديك صلاحية الوصول.', 403);
       }
+      
 
       await _saveUserData(loginResponse);
       emit(LoginSuccess());
@@ -62,24 +65,30 @@ Future<void> login(String email, String password) async {
     final userDataResponse = await AuthApi.getUserData();
     final data = userDataResponse.data;
 
-    await Future.wait([
-      _storage.write(key: 'fullName', value: data['fullName']),
-      _storage.write(key: 'department', value: data['department']),
-      _storage.write(key: 'city', value: data['cityName']),
-      _storage.write(key: 'gov', value: data['governorateName']),
-      _storage.write(key: 'employeeId', value: data['id'].toString()),
-    ]);
+  await LocalStorageHelper.saveEmployee(EmployeeModel(
+      id: data['id'],
+      fullName: data['fullName'],
+      email: loginResponse.username,
+      department: data['department'],
+      cityName: data['cityName'],
+      governorateName: data['governorateName'],
+      nationalId: '', // أو حط القيمة لو كانت متاحة
+      firstName: '', // إن أردت
+      lastName: '',
+      level: [],
+    ));
+
   }
   Future<void> logout() async {
     try {
-      
       await AuthApi.logout();
-      await _storage.deleteAll();
+      await LocalStorageHelper.clearAll(); // 🟢 استخدم الهيلبر
       emit(LoginInitial());
     } catch (e) {
       throw Exception('Failed to logout');
     }
   }
+
   @override
   Future<void> close() {
     emailController.dispose();

@@ -1,6 +1,8 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:civiceye/core/themes/app_colors.dart';
 import 'package:civiceye/cubits/auth_cubit/auth_cubit.dart';
 import 'package:civiceye/cubits/auth_cubit/auth_state.dart';
+import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
 import 'package:civiceye/widgets/SnackbarHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,16 +27,19 @@ class LoginScreen extends StatelessWidget {
         child: Scaffold(
           body: BlocConsumer<LoginCubit, LoginState>(
               listener: (context, state) {
-            // في حالة الفشل، عرض رسالة خطأ عبر Snackbar
+          
               if (state is LoginFailure) {
                 SnackBarHelper.show(context, state.message,type: SnackBarType.error );
               }
+           if (state is LoginSuccess) {
+                
+                Future.microtask(() async {
+                  context.read<ReportsCubit>().clear();
+                  SnackBarHelper.show(context, "تم تسجيل الدخول بنجاح",
+                      type: SnackBarType.success);
 
-              // في حالة النجاح، عرض رسالة نجاح عبر Snackbar
-              if (state is LoginSuccess) {
-                SnackBarHelper.show(context, "تم تسجيل الدخول بنجاح", 
-                    type: SnackBarType.success);
-                Navigator.pushReplacementNamed(context, '/home'); 
+                  Navigator.pushReplacementNamed(context, '/home');
+                });
               }
             },  
             builder: (context, state) {
@@ -163,7 +168,7 @@ Widget _buildLoginButton(
                 cubit.login(
                   _emailController.text.trim(), 
                   _passwordController.text.trim(),
-                ); // إرسال المدخلات إلى الـ cubit
+                );
               }
             },
       color: AppColors.primary,
