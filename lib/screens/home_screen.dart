@@ -9,13 +9,18 @@ import 'package:civiceye/widgets/custom_bottomNavBar.dart';
 import 'package:civiceye/widgets/report_status_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:timeago/timeago.dart' as timeago;
+import 'package:timeago/timeago.dart' show ArMessages;
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     context.read<ReportsCubit>().getReports();
+    timeago.setLocaleMessages('ar', ArMessages());
 
     return Scaffold(
       appBar: const CustomAppBar(),
@@ -76,10 +81,13 @@ class HomeScreen extends StatelessWidget {
                             title: Text(state.inProgressReport!.title),
                             subtitle: Text(
                               'الحالة: ${ReportsCubit.statusLabels[state.inProgressReport!.currentStatus] ?? state.inProgressReport!.currentStatus}',
-                              style: const TextStyle(color: Color.fromARGB(255, 75, 75, 75)),
+                              style:  TextStyle(
+                                  color: isDarkMode
+                                      ? Colors.white
+                                      : Color.fromARGB(255, 65, 65, 65)),
                             ),
                             trailing: IconButton(
-                              icon: const Icon(Icons.edit,
+                              icon: const Icon(Icons.remove_red_eye,
                                   color: AppColors.primary),
                               onPressed: () {
                                 Navigator.push(
@@ -167,9 +175,10 @@ class HomeScreen extends StatelessWidget {
                               ),
                               child: ListTile(
                                 title: Text(report.title),
-                                subtitle: Text(
-                                  'الحالة: ${ReportsCubit.statusLabels[report.currentStatus] ?? report.currentStatus}',
-                                  style: const TextStyle(color: Color.fromARGB(255, 65, 65, 65)),
+                              subtitle: Text(
+                                  ' ${timeago.format(report.createdAt, locale: 'ar')}',
+                                  style:  TextStyle(
+                                      color:isDarkMode? Colors.white : Color.fromARGB(255, 65, 65, 65)),
                                 ),
                                 onTap: () {
                                   Navigator.push(

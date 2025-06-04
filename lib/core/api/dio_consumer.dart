@@ -7,8 +7,10 @@ import 'package:cookie_jar/cookie_jar.dart';
 class DioConsumer {
   static final Dio _dio = Dio()
     ..options.baseUrl = 'http://localhost:8000' // استبدل بـ URL الخاص بـ API الخاص بك
-    ..options.connectTimeout = const Duration(seconds: 20)
-    ..options.receiveTimeout = const Duration(seconds: 20)
+    ..options.connectTimeout = const Duration(seconds: 30)
+    ..options.receiveTimeout = const Duration(seconds: 30)
+    ..options.sendTimeout= const Duration(seconds: 40)
+
     ..options.extra['withCredentials'] = true;
 
   static final CookieJar cookieJar = CookieJar();

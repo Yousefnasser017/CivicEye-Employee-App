@@ -20,8 +20,9 @@ class UpdateStatusDialog {
       (e) => e.name == report.currentStatus,
       orElse: () => ReportStatus.Submitted,
     );
-    ReportStatus selectedStatus = currentStatus;
+
     final availableStatuses = _getAvailableStatuses(currentStatus);
+    ReportStatus selectedStatus = availableStatuses.first;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     await showGeneralDialog(
@@ -151,7 +152,7 @@ class UpdateStatusDialog {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Expanded(
+                     Expanded(
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF725DFE),
@@ -162,31 +163,26 @@ class UpdateStatusDialog {
                               onPressed: isLoading
                                   ? null
                                   : () {
-                                      cubit.updateReportStatus(
-                                        report,
-                                        selectedStatus
-                                            .name, 
-                                        notesController.text.trim(),
-                                      );
+                                      if (selectedStatus != currentStatus) {
+                                        cubit.updateReportStatus(
+                                          report,
+                                          selectedStatus.name,
+                                          notesController.text.trim(),
+                                        );
+                                      }
                                     },
                               child: isLoading
-                                  ? SizedBox(
+                                  ? const SizedBox(
                                       height: 20,
                                       width: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        color: isDarkMode
-                                            ? const Color(0xFF725DFE)
-                                            : Colors.white,
+                                        color: Colors.white,
                                       ),
                                     )
-                                  : Text(
+                                  : const Text(
                                       'تحديث',
-                                      style: TextStyle(
-                                        color: isDarkMode
-                                            ? Colors.white
-                                            : Colors.black,
-                                      ),
+                                      style: TextStyle(color: Colors.white),
                                     ),
                             ),
                           ),
@@ -212,8 +208,9 @@ class UpdateStatusDialog {
     );
   }
 
-  static List<ReportStatus> _getAvailableStatuses(ReportStatus currentStatus) {
-    final available = <ReportStatus>[currentStatus];
+ static List<ReportStatus> _getAvailableStatuses(ReportStatus currentStatus) {
+    final List<ReportStatus> available = [];
+
     switch (currentStatus) {
       case ReportStatus.Submitted:
         available.add(ReportStatus.In_Progress);
@@ -222,7 +219,7 @@ class UpdateStatusDialog {
         available.addAll([
           ReportStatus.On_Hold,
           ReportStatus.Resolved,
-          ReportStatus.Cancelled
+          ReportStatus.Cancelled,
         ]);
         break;
       case ReportStatus.On_Hold:
@@ -230,8 +227,11 @@ class UpdateStatusDialog {
         break;
       case ReportStatus.Resolved:
       case ReportStatus.Cancelled:
+
         break;
     }
-    return available.toSet().toList();
+
+    return available;
   }
+
 }

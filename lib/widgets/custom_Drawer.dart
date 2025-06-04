@@ -179,7 +179,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          'تأكيد تسجيل الخروج',
+          ' تسجيل الخروج',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -187,7 +187,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
           ),
         ),
         content: Text(
-          'هل تاكيد تسجيل الخروج؟',
+          'هل تريد تسجيل الخروج؟',
           style: TextStyle(
             fontSize: 16,
             color: isDarkMode ? Colors.white : Colors.black,
