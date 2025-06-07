@@ -22,7 +22,7 @@ extension ReportStatusExtension on ReportStatus {
       case ReportStatus.Resolved:
         return 'تم الحل';
       case ReportStatus.Cancelled:
-        return 'تم الإلغاء';
+        return ' إلغاء';
     }
   }
 

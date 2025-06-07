@@ -5,8 +5,10 @@ import 'package:civiceye/models/report_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ReportsCubit extends Cubit<ReportsState> {
-  ReportsCubit() : super(ReportsInitial());
-
+  ReportsCubit({String initialStatus = 'All'})
+      : selectedStatus = initialStatus,
+        super(ReportsInitial());
+        
   int? _employeeId;
   bool _hasMore = true;
   final int _perPage = 10;
@@ -29,7 +31,7 @@ class ReportsCubit extends Cubit<ReportsState> {
     'Cancelled': 'تم الإلغاء',
   };
 
-  String selectedStatus = 'All';
+  String selectedStatus;
   List<ReportModel> _allReports = [];
 
   int? get employeeId => _employeeId;

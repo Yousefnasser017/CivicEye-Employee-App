@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
 import 'package:civiceye/cubits/report_cubit/report_state.dart';
@@ -6,9 +9,6 @@ import 'package:civiceye/widgets/app_error_widget.dart';
 import 'package:civiceye/widgets/custom_AppBar.dart';
 import 'package:civiceye/widgets/custom_Drawer.dart';
 import 'package:civiceye/widgets/custom_bottomNavBar.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ReportsScreen extends StatefulWidget {
@@ -18,17 +18,18 @@ class ReportsScreen extends StatefulWidget {
   State<ReportsScreen> createState() => _ReportsScreenState();
 }
 
+// ثابت عام لترجمة الحالات
+const Map<String, String> statusLabels = {
+  'All': 'الكل',
+  'Submitted': 'تم الأستلام',
+  'In_Progress': 'قيد التنفيذ',
+  'On_Hold': 'قيد الأنتظار',
+  'Resolved': 'تم الحل',
+  'Cancelled': 'تم الالغاء',
+};
+
 class _ReportsScreenState extends State<ReportsScreen> {
   final ScrollController _scrollController = ScrollController();
-
-  final Map<String, String> statusLabels = const {
-    'All': 'الكل',
-    'Submitted': 'تم الأستلام',
-    'In_Progress': 'قيد التنفيذ',
-    'On_Hold': 'قيد الأنتظار',
-    'Resolved': 'تم الحل',
-    'Cancelled': 'تم الالغاء',
-  };
 
   @override
   void initState() {
@@ -69,69 +70,24 @@ class _ReportsScreenState extends State<ReportsScreen> {
       ),
       body: Column(
         children: [
-          // الشريط الأفقي لفلترة الحالة
-          SizedBox(
-            height: 50,
-            child: BlocBuilder<ReportsCubit, ReportsState>(
-              builder: (context, state) {
-                return ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  itemCount: cubit.statusFilters.length,
-                  itemBuilder: (context, index) {
-                    final status = cubit.statusFilters[index];
-                    final isSelected = status == cubit.selectedStatus;
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: ChoiceChip(
-                        label: Text(
-                          statusLabels[status] ?? status,
-                          style: TextStyle(
-                            color: isSelected
-                                ? colorScheme.onPrimary
-                                : colorScheme.onSurface,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        selected: isSelected,
-                        onSelected: (_) => cubit.filterByStatus(status),
-                        selectedColor: colorScheme.primary,
-                        backgroundColor: colorScheme.surfaceVariant,
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-
-          // قائمة البلاغات مع معالجة الحالات
+          _buildStatusFilterBar(cubit, colorScheme),
           Expanded(
             child: BlocBuilder<ReportsCubit, ReportsState>(
               builder: (context, state) {
-                if (state is ReportsLoading && state.report.isEmpty) {
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    itemCount: 6,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: _ShimmerReportCard(),
-                        );
-                    },
-                  );
-                } else if (state is ReportsError) {
-                  return AppErrorWidget(message: state.message);
-                } else if ((state is ReportsLoaded && state.report.isEmpty) ||
-                    (state is ReportsLoading && state.report.isEmpty)) {
-                  return const Center(child: Text('لا توجد بلاغات'));
+                final reports = state is ReportsLoaded ? state.report : [];
+                final hasMore = state is ReportsLoaded ? state.hasMore : false;
+
+                if (state is ReportsLoading && reports.isEmpty) {
+                  return _buildShimmerList();
                 }
 
-                // استخرج البلاغات وحالة المزيد
-                final reports =
-                    state is ReportsLoaded ? state.report : <dynamic>[];
-                final hasMore = state is ReportsLoaded ? state.hasMore : false;
+                if (state is ReportsError) {
+                  return AppErrorWidget(message: state.message);
+                }
+
+                if (reports.isEmpty) {
+                  return const Center(child: Text('لا توجد بلاغات'));
+                }
 
                 return RefreshIndicator(
                   onRefresh: () => cubit.getReports(),
@@ -145,6 +101,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                           child: Center(child: CircularProgressIndicator()),
                         );
                       }
+
                       final report = reports[index];
                       return _buildReportCard(report, colorScheme);
                     },
@@ -158,19 +115,54 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
+  Widget _buildStatusFilterBar(ReportsCubit cubit, ColorScheme colorScheme) {
+    return SizedBox(
+      height: 50,
+      child: BlocBuilder<ReportsCubit, ReportsState>(
+        builder: (context, state) {
+          return ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            itemCount: cubit.statusFilters.length,
+            itemBuilder: (context, index) {
+              final status = cubit.statusFilters[index];
+              final isSelected = status == cubit.selectedStatus;
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: ChoiceChip(
+                  label: Text(
+                    statusLabels[status] ?? status,
+                    style: TextStyle(
+                      color: isSelected
+                          ? colorScheme.onPrimary
+                          : colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  selected: isSelected,
+                  onSelected: (_) => cubit.filterByStatus(status),
+                  selectedColor: colorScheme.primary,
+                  backgroundColor: colorScheme.surfaceVariant,
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildReportCard(dynamic report, ColorScheme colorScheme) {
-    final DateFormat formatter = DateFormat('dd/MM/yyyy');
-    final formattedDate = formatter.format(report.createdAt);
+    final formattedDate = DateFormat('dd/MM/yyyy').format(report.createdAt);
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
-      transitionBuilder: (child, animation) {
-        return SlideTransition(
-          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
-              .animate(animation),
-          child: FadeTransition(opacity: animation, child: child),
-        );
-      },
+      transitionBuilder: (child, animation) => SlideTransition(
+        position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+            .animate(animation),
+        child: FadeTransition(opacity: animation, child: child),
+      ),
       child: Padding(
         key: ValueKey(report.reportId),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -191,20 +183,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeInOut,
             tween: Tween<double>(begin: 0.95, end: 1),
-            builder: (context, scale, child) => Transform.scale(
-              scale: scale,
-              child: child,
-            ),
+            builder: (context, scale, child) =>
+                Transform.scale(scale: scale, child: child),
             child: Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.surface,
-                    Theme.of(context).colorScheme.surface,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -225,8 +208,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         .titleMedium
                         ?.copyWith(fontWeight: FontWeight.w600),
                   ),
-                  if (report.description != null &&
-                      report.description!.isNotEmpty) ...[
+                  if (report.description?.isNotEmpty == true) ...[
                     const SizedBox(height: 8),
                     Text(
                       report.description!,
@@ -257,7 +239,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Widget _buildStatusBadge(String status, ColorScheme colorScheme) {
-    final color = _statusColor(status, context);
+    final color = _statusColor(status);
     final icon = _statusIcon(status);
 
     return Container(
@@ -301,65 +283,54 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
   }
 
-  Color _statusColor(String status, BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+  Color _statusColor(String status) {
     switch (status) {
       case 'Submitted':
-        return isDark ? Colors.blue[300]! : Colors.blue;
+        return Colors.blue;
       case 'In_Progress':
-        return isDark ? Colors.orange[300]! : Colors.orange;
+        return Colors.orange;
       case 'On_Hold':
-        return isDark ? Colors.amber[300]! : Colors.amber;
+        return Colors.amber;
       case 'Resolved':
-        return isDark ? Colors.green[300]! : Colors.green;
+        return Colors.green;
       case 'Cancelled':
-        return isDark ? Colors.red[300]! : Colors.red;
+        return Colors.red;
       default:
-        return Theme.of(context).colorScheme.primary;
+        return Colors.grey;
     }
   }
 
-  Widget _ShimmerReportCard() {
-    final baseColor = Theme.of(context).brightness == Brightness.dark
-        ? Colors.grey[700]!
-        : Colors.grey[300]!;
-
-    final highlightColor = Theme.of(context).brightness == Brightness.dark
-        ? Colors.grey[500]!
-        : Colors.grey[100]!;
-
-    return Shimmer.fromColors(
-      baseColor: baseColor,
-      highlightColor: highlightColor,
-      child: Container(
-        decoration: BoxDecoration(
-          color: baseColor,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(height: 18, width: 150, color: Colors.white),
-            const SizedBox(height: 10),
-            Container(height: 14, width: double.infinity, color: Colors.white),
-            const SizedBox(height: 6),
-            Container(height: 14, width: double.infinity, color: Colors.white),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(height: 16, width: 80, color: Colors.white),
-                Container(height: 14, width: 50, color: Colors.white),
-              ],
-            ),
-          ],
-        ),
+  Widget _buildShimmerList() {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      itemCount: 6,
+      itemBuilder: (context, index) => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: _ShimmerReportCard(),
       ),
     );
   }
 }
 
-  
+class _ShimmerReportCard extends StatelessWidget {
+  const _ShimmerReportCard();
 
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = Theme.of(context).brightness == Brightness.dark
+        ? Colors.grey[700]!
+        : Colors.grey[300]!;
+
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: Colors.white,
+      child: Container(
+        height: 100,
+        decoration: BoxDecoration(
+          color: baseColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+    );
+  }
+}
