@@ -66,7 +66,7 @@ class LocalStorageHelper {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     await _storage.deleteAll();
-    print(' Storage cleared!');
+    debugPrint(' Storage cleared!');
   }
 
 

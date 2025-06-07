@@ -29,6 +29,7 @@ class _MapScreenState extends State<MapScreen> {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: "openGoogleMaps",
         onPressed: _openInGoogleMaps,
         icon: const Icon(Icons.navigation),
         label: const Text('افتح في Google Maps'),
@@ -68,6 +69,7 @@ class _MapScreenState extends State<MapScreen> {
             top: 40,
             right: 16,
             child: FloatingActionButton(
+              heroTag: "backButton",
               mini: true,
               backgroundColor: Colors.white,
               onPressed: () => Navigator.pop(context),

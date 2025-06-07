@@ -30,7 +30,7 @@ class SnackBarHelper {
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
         ],

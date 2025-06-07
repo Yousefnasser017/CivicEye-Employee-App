@@ -9,18 +9,28 @@ import 'package:civiceye/widgets/custom_bottomNavBar.dart';
 import 'package:civiceye/widgets/report_status_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:timeago/timeago.dart' show ArMessages;
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<ReportsCubit>().getReports();
+    timeago.setLocaleMessages('ar', ArMessages());
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    context.read<ReportsCubit>().getReports();
-    timeago.setLocaleMessages('ar', ArMessages());
 
     return Scaffold(
       appBar: const CustomAppBar(),
@@ -35,9 +45,7 @@ class HomeScreen extends StatelessWidget {
       body: BlocBuilder<ReportsCubit, ReportsState>(
         builder: (context, state) {
           if (state is ReportsLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
+            return _buildFullScreenShimmer(context);
           }
 
           if (state is ReportsError) {
@@ -54,169 +62,264 @@ class HomeScreen extends StatelessWidget {
           }
 
           if (state is ReportsLoaded) {
+            final inProgressReport = state.inProgressReport;
+
             return RefreshIndicator(
-              onRefresh: () async {
-                context.read<ReportsCubit>().getReports();
-              },
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // البلاغ الجاري
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(12, 16, 12, 8),
-                      child: Text('البلاغ الجاري',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
-                    ),
-                    if (state.inProgressReport != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Card(
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          child: ListTile(
-                            title: Text(state.inProgressReport!.title),
-                            subtitle: Text(
-                              'الحالة: ${ReportsCubit.statusLabels[state.inProgressReport!.currentStatus] ?? state.inProgressReport!.currentStatus}',
-                              style:  TextStyle(
-                                  color: isDarkMode
-                                      ? Colors.white
-                                      : Color.fromARGB(255, 65, 65, 65)),
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.remove_red_eye,
-                                  color: AppColors.primary),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ReportDetailsScreen(
-                                      report: state.inProgressReport!,
-                                      employeeId: context
-                                              .read<ReportsCubit>()
-                                              .employeeId
-                                              ?.toString() ??
-                                          '',
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+              onRefresh: () async => context.read<ReportsCubit>().getReports(),
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                           const SizedBox(height: 16), // مسافة جيدة فوق العنوان
+                            Text(
+                            '  البلاغ الجاري حالياً',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary, // لون مميز
+                                  fontSize: 20, // حجم أكبر
+                                ),
                           ),
-                        ),
-                      )
-                    else
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          'لا يوجد بلاغ جاري حالياً',
-                          style: TextStyle(color:  Color.fromARGB(255, 65, 65, 65)),
-                        ),
-                      ),
-
-                    const SizedBox(height: 16),
-
-                    // الإحصائيات
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text('إحصائيات البلاغات',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children:
-                            state.reportCountsByStatus.entries.where((entry) => entry.key != 'Cancelled').map((entry) {
-                          return StatsCard(
-                            statusKey: entry.key,
-                            title: ReportsCubit.statusLabels[entry.key] ??
-                                entry.key,
-                            count: entry.value,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const ReportsScreen(),
-                                ),
-                              );
-                            },
-                          );
-                        }).toList(),
+                          const SizedBox(height: 12), // مسافة جيدة تحت العنوان
+                          Divider(
+                              color: AppColors.primary.withOpacity(0.5),
+                              thickness: 1),
+                          inProgressReport != null &&
+                                  inProgressReport.title.trim().isNotEmpty
+                              ? _buildInProgressCard(context, inProgressReport)
+                              : _buildEmptyMessage('لا يوجد بلاغ جاري حالياً'),
+                        ],
                       ),
                     ),
-
-                    // أحدث البلاغات
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(12, 16, 12, 8),
-                      child: Text('أحدث البلاغات',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
-                    ),
-                    if (state.latestReports.isNotEmpty)
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: state.latestReports.length,
-                        itemBuilder: (context, index) {
-                          final report = state.latestReports[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
-                            child: Card(
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: ListTile(
-                                title: Text(report.title),
-                              subtitle: Text(
-                                  ' ${timeago.format(report.createdAt, locale: 'ar')}',
-                                  style:  TextStyle(
-                                      color:isDarkMode? Colors.white : Color.fromARGB(255, 65, 65, 65)),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      Text(
+                            'إحصائيات البلاغات',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary, // لون مميز
+                                  fontSize: 20, // حجم أكبر
                                 ),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ReportDetailsScreen(
-                                        report: report,
-                                        employeeId: context
-                                                .read<ReportsCubit>()
-                                                .employeeId
-                                                ?.toString() ??
-                                            '',
+                          ),
+                          const SizedBox(height: 12), // مسافة جيدة تحت العنوان
+                          Divider(
+                              color: AppColors.primary.withOpacity(0.5),
+                              thickness: 1),
+                          const SizedBox(height: 12), // مسافة جيدة تحت الخط
+                          GridView.count(
+                            crossAxisCount: 2,
+                            shrinkWrap: true,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            physics: const NeverScrollableScrollPhysics(),
+                            childAspectRatio: 1.3,
+                            children: state.reportCountsByStatus.entries
+                                .where((e) => e.key != 'Cancelled')
+                                .map((entry) => StatsCard(
+                                      statusKey: entry.key,
+                                      title: ReportsCubit
+                                              .statusLabels[entry.key] ??
+                                          entry.key,
+                                      count: entry.value,
+                                      onTap: () => _navigateTo(
+                                          context, const ReportsScreen()),
+                                    ))
+                                .toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                        Text(
+                            'أحدث البلاغات',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary, // لون مميز
+                                  fontSize: 20, // حجم أكبر
+                                ),
+                          ),
+                          const SizedBox(height: 12), // مسافة جيدة تحت العنوان
+                          Divider(
+                              color: AppColors.primary.withOpacity(0.5),
+                              thickness: 1),
+                          if (state.latestReports.isNotEmpty)
+                            ...state.latestReports.map((report) => Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 4),
+                                  child: Card(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                    child: ListTile(
+                                      title: Text(report.title),
+                                      subtitle: Text(
+                                        timeago.format(report.createdAt,
+                                            locale: 'ar'),
+                                        style: TextStyle(
+                                          color: isDarkMode
+                                              ? Colors.white70
+                                              : Colors.grey[700],
+                                        ),
+                                      ),
+                                      trailing: const Icon(Icons.chevron_right,
+                                          color: AppColors.primary),
+                                      onTap: () => _navigateTo(
+                                        context,
+                                        ReportDetailsScreen(
+                                          report: report,
+                                          employeeId: context
+                                                  .read<ReportsCubit>()
+                                                  .employeeId
+                                                  ?.toString() ??
+                                              '',
+                                        ),
                                       ),
                                     ),
-                                  );
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                      )
-                    else
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          'لا توجد بلاغات حديثة حالياً.',
-                          style: TextStyle(color: Color.fromARGB(255, 65, 65, 65)),
-                        ),
+                                  ),
+                                ))
+                          else
+                            _buildEmptyMessage('لا توجد بلاغات حديثة حالياً.'),
+                        ],
                       ),
-
-                    const SizedBox(height: 24),
-                  ],
-                ),
+                    ),
+                  ),
+                ],
               ),
             );
           }
 
           return const SizedBox.shrink();
+        },
+      ),
+    );
+  }
+
+  Widget _buildInProgressCard(BuildContext context, dynamic report) {
+    IconData statusIcon = Icons.timelapse;
+    Color statusColor = AppColors.primary;
+
+    switch (report.currentStatus) {
+      case 'On_Hold':
+        statusIcon = Icons.pause_circle_filled;
+        statusColor = Colors.orange;
+        break;
+      case 'Resolved':
+        statusIcon = Icons.check_circle;
+        statusColor = Colors.green;
+        break;
+      case 'In_Progress':
+        statusIcon = Icons.timelapse;
+        statusColor = const Color.fromARGB(255, 255, 175, 63);
+        break;
+      default:
+        statusIcon = Icons.info;
+    }
+
+   return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: statusColor.withOpacity(0.5), width: 1),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        title: Text(report.title,
+            style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(
+          'تاريخ البلاغ: ${DateFormat('dd/MM/yyyy').format(report.createdAt)}',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        trailing: IconButton(
+          icon: Icon(statusIcon, color: statusColor),
+          onPressed: () => _navigateTo(
+            context,
+            ReportDetailsScreen(
+              report: report,
+              employeeId:
+                  context.read<ReportsCubit>().employeeId?.toString() ?? '',
+            ),
+          ),
+        ),
+      ),
+    );
+
+  }
+
+  Widget _buildEmptyMessage(String text) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.grey.withOpacity(0.1),
+      ),
+      child: Center(
+        child: Text(
+          text,
+          style:  TextStyle(color: isDarkMode ?  Colors.white : Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+Widget _buildFullScreenShimmer(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: Container(
+        width: size.width,
+        height: size.height,
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey,
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+    );
+  }
+
+  void _navigateTo(BuildContext context, Widget page) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (_, __, ___) => page,
+        transitionsBuilder: (_, animation, __, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          final tween = Tween(begin: begin, end: end)
+              .chain(CurveTween(curve: Curves.easeInOut));
+          return SlideTransition(
+              position: animation.drive(tween), child: child);
         },
       ),
     );

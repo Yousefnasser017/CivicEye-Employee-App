@@ -1,6 +1,7 @@
 import 'package:civiceye/models/report_model.dart';
 import 'package:equatable/equatable.dart';
 
+
 class ReportDetailState extends Equatable {
   final bool isLoading;
   final bool isStatusUpdating;
@@ -24,13 +25,14 @@ class ReportDetailState extends Equatable {
       isLoading: isLoading ?? this.isLoading,
       isStatusUpdating: isStatusUpdating ?? this.isStatusUpdating,
       report: report ?? this.report,
-      error: error ?? this.error,
+      error: error,
     );
   }
 
   @override
   List<Object?> get props => [isLoading, isStatusUpdating, report, error];
 }
+
 
 class ReportDetailInitial extends ReportDetailState {}
 

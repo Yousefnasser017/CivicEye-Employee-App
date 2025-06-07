@@ -6,26 +6,20 @@ import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:civiceye/models/sign_in_model.dart';
 import 'package:civiceye/models/user_model.dart';
 import 'package:dio/dio.dart';
-
-
+import 'package:flutter/material.dart';
 
 class AuthApi {
   static final Dio _dio = DioConsumer.dio;
   
-  /// تسجيل الدخول
   static Future<LoginResponseModel> login(String email, String password) async {
     try {
-    final response = await _dio.post(
+      final response = await _dio.post(
         ApiConstants.login,
         data: {'username': email, 'password': password},
         options: Options(
-          extra: {'withCredentials': true}, 
+          extra: {'withCredentials': true},
         ),
       );
-      // final uri = Uri.parse('${ApiConstants.login}');
-      // final cookies = await DioConsumer.cookieJar.loadForRequest(uri);
-      // print("✅ Cookies بعد تسجيل الدخول: $cookies");
-      //      // تأكد من التطابق التام مع baseUrl
 
       if (response.statusCode == 200) {
         return LoginResponseModel.fromJson(response.data);
@@ -43,18 +37,14 @@ class AuthApi {
     }
   }
 
-
-
-  /// جلب بيانات المستخدم
   static Future<Response> getUserData() async {
     try {
-     final response = await _dio.get(
+      final response = await _dio.get(
         ApiConstants.user,
         options: Options(
-          extra: {'withCredentials': true}, // ✅ مهم جدًا لإرسال الكوكيز
+          extra: {'withCredentials': true},
         ),
       );
-
 
       if (response.statusCode == 200) {
         final employee = EmployeeModel.fromJson(response.data);
@@ -73,14 +63,14 @@ class AuthApi {
       );
     }
   }
-    /// تسجيل الخروج
-static Future<bool> logout() async {
+
+
+  static Future<bool> logout() async {
     try {
-      
       final response = await _dio.get(
         ApiConstants.logout,
         options: Options(
-          extra: {'withCredentials': true}, // ✅ لإرسال الكوكيز مع الطلب
+          extra: {'withCredentials': true},
         ),
       );
 
@@ -88,8 +78,7 @@ static Future<bool> logout() async {
         try {
           await LocalStorageHelper.clearAll();
         } catch (e) {
-          // ممكن تسجل الخطأ، أو تعيد رميه حسب احتياجك
-          print('Failed to clear local storage on logout: $e');
+          debugPrint('Failed to clear local storage on logout: $e');
         }
         return true;
       } else {
@@ -105,6 +94,4 @@ static Future<bool> logout() async {
       );
     }
   }
-
-
 }

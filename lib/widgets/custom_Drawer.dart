@@ -48,12 +48,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
             'تم تسجيل الخروج بنجاح',
             type: SnackBarType.success,
           );
-          // Clear the local storage
-          // LocalStorageHelper.clearAll();
-          // Future.delayed(const Duration(seconds: 3), () {
-          //   // Navigate to the login screen
-          //   Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-          // });
+      
           
         } else if (state is LogoutFailure) {
           SnackBarHelper.show(
@@ -156,7 +151,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
   Widget _buildThemeSwitch(BuildContext context) {
     return SwitchListTile(
-      title: const Text('الوضع المظلم'),
+      title: const Text('الوضع الليلى'),
       secondary: const Icon(Icons.dark_mode),
       value: isDarkMode,
       onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
@@ -175,53 +170,76 @@ class _CustomDrawerState extends State<CustomDrawer> {
   }
 
   void _showLogoutConfirmationDialog(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
-          ' تسجيل الخروج',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: isDarkMode ? Colors.white : Colors.black,
-          ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+        contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+        title: const Row(
+          children: [
+            Icon(Icons.logout, color: Colors.red),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'تسجيل الخروج',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ),
-        content: Text(
+        content: const Text(
           'هل تريد تسجيل الخروج؟',
-          style: TextStyle(
-            fontSize: 16,
-            color: isDarkMode ? Colors.white : Colors.black,
-          ),
+          style: TextStyle(fontSize: 16),
         ),
         actions: [
-          TextButton(
-            child: const Text(
-              'إلغاء',
-              style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 255, 17, 0)),
-            ),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent, shadowColor: Colors.transparent),
-            child: const Text(
-              'تأكيد',
-              style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 255, 17, 0)),
-            ),
-           onPressed: () async {
-                final cubit = context.read<LoginCubit>();
-                await cubit.logout();
-                context.read<ReportsCubit>().clear();
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    side: BorderSide(color: Colors.grey[400]!),
+                    foregroundColor:
+                        isDarkMode ? Colors.grey[300] : Colors.grey[800],
+                  ),
+                  child: const Text('إلغاء', style: TextStyle(fontSize: 16)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final cubit = context.read<LoginCubit>();
+                    await cubit.logout();
+                    context.read<ReportsCubit>().clear();
 
-                if (!context.mounted) return;
+                    if (!context.mounted) return;
 
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => LoginScreen()),
-                  (route) => false,
-                );
-              }
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => LoginScreen()),
+                      (route) => false,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('تأكيد', style: TextStyle(fontSize: 16)),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
+
 }

@@ -8,12 +8,7 @@ import 'package:civiceye/models/report_model.dart';
 
 class ReportApi {
   static final Dio _dio = DioConsumer.dio;
-  Future<void> loadEmployeeId() async {
-    final employee = await LocalStorageHelper.getEmployee();
-    if (employee != null) {
-      
-    }
-  }
+
 
   /// Fetch reports assigned to the given employee
   static Future<List<ReportModel>> getReportsByEmployee(int employee) async {

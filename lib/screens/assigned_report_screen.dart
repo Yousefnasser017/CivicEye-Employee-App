@@ -1,14 +1,15 @@
-import 'package:civiceye/core/storage/cache_helper.dart';
+
 import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
 import 'package:civiceye/cubits/report_cubit/report_state.dart';
 import 'package:civiceye/screens/report_details.dart';
 import 'package:civiceye/widgets/app_error_widget.dart';
-import 'package:civiceye/widgets/app_loading.dart';
 import 'package:civiceye/widgets/custom_AppBar.dart';
 import 'package:civiceye/widgets/custom_Drawer.dart';
 import 'package:civiceye/widgets/custom_bottomNavBar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -19,7 +20,8 @@ class ReportsScreen extends StatefulWidget {
 
 class _ReportsScreenState extends State<ReportsScreen> {
   final ScrollController _scrollController = ScrollController();
-  final Map<String, String> statusLabels = {
+
+  final Map<String, String> statusLabels = const {
     'All': 'الكل',
     'Submitted': 'تم الأستلام',
     'In_Progress': 'قيد التنفيذ',
@@ -27,6 +29,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     'Resolved': 'تم الحل',
     'Cancelled': 'تم الالغاء',
   };
+
   @override
   void initState() {
     super.initState();
@@ -41,193 +44,215 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300 &&
-        context.read<ReportsCubit>().state is! ReportsLoading) {
-      context.read<ReportsCubit>().loadMoreReports();
+    final cubit = context.read<ReportsCubit>();
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 300 &&
+        cubit.state is! ReportsLoading) {
+      cubit.loadMoreReports();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final cubit = context.read<ReportsCubit>();
 
     return Scaffold(
-        appBar: const CustomAppBar(),
-        drawer: const CustomDrawer(),
-        bottomNavigationBar: CustomBottomNavBar(
-          currentIndex: 1,
-          onTap: (index) {
-            if (index == 0) Navigator.pushReplacementNamed(context, '/home');
-            if (index == 2) Navigator.pushReplacementNamed(context, '/profile');
-          },
-        ),
-        body: Column(
-          children: [
-            BlocBuilder<ReportsCubit, ReportsState>(
+      appBar: const CustomAppBar(),
+      drawer: const CustomDrawer(),
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: 1,
+        onTap: (index) {
+          if (index == 0) Navigator.pushReplacementNamed(context, '/home');
+          if (index == 2) Navigator.pushReplacementNamed(context, '/profile');
+        },
+      ),
+      body: Column(
+        children: [
+          // الشريط الأفقي لفلترة الحالة
+          SizedBox(
+            height: 50,
+            child: BlocBuilder<ReportsCubit, ReportsState>(
               builder: (context, state) {
-                final cubit = context.read<ReportsCubit>();
-                return SizedBox(
-                  height: 50,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    children: cubit.statusFilters.map((status) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: ChoiceChip(
-                          label: Text(statusLabels[status] ?? status),  // استخدم الترجمة هنا
-                          selected: status == cubit.selectedStatus,
-                          onSelected: (_) => cubit.filterByStatus(status),
-                          selectedColor: colorScheme.primary,
-                          labelStyle: TextStyle(
-                            color: status == cubit.selectedStatus
+                return ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  itemCount: cubit.statusFilters.length,
+                  itemBuilder: (context, index) {
+                    final status = cubit.statusFilters[index];
+                    final isSelected = status == cubit.selectedStatus;
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ChoiceChip(
+                        label: Text(
+                          statusLabels[status] ?? status,
+                          style: TextStyle(
+                            color: isSelected
                                 ? colorScheme.onPrimary
                                 : colorScheme.onSurface,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      );
-                    }).toList(),
+                        selected: isSelected,
+                        onSelected: (_) => cubit.filterByStatus(status),
+                        selectedColor: colorScheme.primary,
+                        backgroundColor: colorScheme.surfaceVariant,
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+
+          // قائمة البلاغات مع معالجة الحالات
+          Expanded(
+            child: BlocBuilder<ReportsCubit, ReportsState>(
+              builder: (context, state) {
+                if (state is ReportsLoading && state.report.isEmpty) {
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    itemCount: 6,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: _ShimmerReportCard(),
+                        );
+                    },
+                  );
+                } else if (state is ReportsError) {
+                  return AppErrorWidget(message: state.message);
+                } else if ((state is ReportsLoaded && state.report.isEmpty) ||
+                    (state is ReportsLoading && state.report.isEmpty)) {
+                  return const Center(child: Text('لا توجد بلاغات'));
+                }
+
+                // استخرج البلاغات وحالة المزيد
+                final reports =
+                    state is ReportsLoaded ? state.report : <dynamic>[];
+                final hasMore = state is ReportsLoaded ? state.hasMore : false;
+
+                return RefreshIndicator(
+                  onRefresh: () => cubit.getReports(),
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: hasMore ? reports.length + 1 : reports.length,
+                    itemBuilder: (context, index) {
+                      if (index >= reports.length) {
+                        return const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      final report = reports[index];
+                      return _buildReportCard(report, colorScheme);
+                    },
                   ),
                 );
               },
             ),
+          ),
+        ],
+      ),
+    );
+  }
 
-            Expanded(
-              child: BlocBuilder<ReportsCubit, ReportsState>(
-                builder: (context, state) {
-                  if (state is ReportsLoading && state.report.isEmpty) {
-                    return const AppLoading();
-                  } else if (state is ReportsError) {
-                    return AppErrorWidget(message: state.message);
-                  } else if (state is ReportsLoaded && state.report.isEmpty) {
-                    return const Center(child: Text(' لا توجد بلاغات'));
-                  } else if (state is ReportsLoading || state is ReportsLoaded) {
-                    final reports = state is ReportsLoaded ? state.report : [];
+  Widget _buildReportCard(dynamic report, ColorScheme colorScheme) {
+    final DateFormat formatter = DateFormat('dd/MM/yyyy');
+    final formattedDate = formatter.format(report.createdAt);
 
-                    final hasMore = state is ReportsLoaded ? state.hasMore : false;
-
-                    return RefreshIndicator(
-                      onRefresh: () => context.read<ReportsCubit>().getReports(),
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        itemCount: hasMore ? reports.length + 1 : reports.length,
-                        itemBuilder: (context, index) {
-                          if (index >= reports.length) {
-                            return const Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Center(child: CircularProgressIndicator()),
-                            );
-                          }
-                          final report = reports[index];
-                          return AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),  // جعلها أسرع من 400
-                            transitionBuilder: (child, animation) {
-                              return SlideTransition(
-                                position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
-                                    .animate(animation),
-                                child: FadeTransition(opacity: animation, child: child),
-                              );
-                            },
-                            child: Padding(
-                              key: ValueKey(report.reportId),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              child: GestureDetector(
-                               onTap: () {
-                                  LocalStorageHelper.getEmployee().then((employee) {
-                                    if (report != null) {
-                                      // تحقق من أنه ليس null قبل محاولة استخدام toJson()
-                                      Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => ReportDetailsScreen(
-                                              report: report,
-                                              employeeId: context.read<ReportsCubit>().employeeId?.toString() ?? '', // employeeId هذا مجرد مثال، قم بتمريره بشكل صحيح من السياق
-                                            ),
-                                          ),
-                                        );
-                                    } else {
-                                      // إذا كانت report فارغة أو null
-                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('لا يوجد تقرير')));
-                                    }
-                                  });
-                                },
-
-                                child: TweenAnimationBuilder(
-                                  duration: const Duration(milliseconds: 400),
-                                  curve: Curves.easeInOut,
-                                  tween: Tween<double>(begin: 0.95, end: 1),
-                                  builder: (context, scale, child) => Transform.scale(
-                                    scale: scale,
-                                    child: child,
-                                  ),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Theme.of(context).colorScheme.surface,
-                                          Theme.of(context).colorScheme.surface
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.08),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    padding: const EdgeInsets.all(16),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          report.title,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium
-                                              ?.copyWith(fontWeight: FontWeight.w600),
-                                        ),
-                                        if (report.description != null) ...[
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            report.description!,
-                                            style: Theme.of(context).textTheme.bodyMedium,
-                                          ),
-                                        ],
-                                        const SizedBox(height: 12),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            _buildStatusBadge(report.currentStatus, colorScheme),
-                                            Text(
-                                              '${report.createdAt.day}/${report.createdAt.month}/${report.createdAt.year}',
-                                              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                                    fontSize: 13,
-                                                    color: colorScheme.onSurface.withOpacity(0.6),
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      transitionBuilder: (child, animation) {
+        return SlideTransition(
+          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+              .animate(animation),
+          child: FadeTransition(opacity: animation, child: child),
+        );
+      },
+      child: Padding(
+        key: ValueKey(report.reportId),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ReportDetailsScreen(
+                  report: report,
+                  employeeId:
+                      context.read<ReportsCubit>().employeeId?.toString() ?? '',
+                ),
+              ),
+            );
+          },
+          child: TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut,
+            tween: Tween<double>(begin: 0.95, end: 1),
+            builder: (context, scale, child) => Transform.scale(
+              scale: scale,
+              child: child,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Theme.of(context).colorScheme.surface,
+                    Theme.of(context).colorScheme.surface,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    report.title,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  if (report.description != null &&
+                      report.description!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      report.description!,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildStatusBadge(report.currentStatus, colorScheme),
+                      Text(
+                        formattedDate,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              fontSize: 13,
+                              color: colorScheme.onSurface.withOpacity(0.6),
                             ),
-                          );
-                        },
                       ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
+      ),
     );
   }
 
@@ -269,7 +294,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
         return Icons.pause_circle_filled;
       case 'Resolved':
         return Icons.check_circle;
-     
       case 'Cancelled':
         return Icons.cancel;
       default:
@@ -295,4 +319,47 @@ class _ReportsScreenState extends State<ReportsScreen> {
         return Theme.of(context).colorScheme.primary;
     }
   }
+
+  Widget _ShimmerReportCard() {
+    final baseColor = Theme.of(context).brightness == Brightness.dark
+        ? Colors.grey[700]!
+        : Colors.grey[300]!;
+
+    final highlightColor = Theme.of(context).brightness == Brightness.dark
+        ? Colors.grey[500]!
+        : Colors.grey[100]!;
+
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: Container(
+        decoration: BoxDecoration(
+          color: baseColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(height: 18, width: 150, color: Colors.white),
+            const SizedBox(height: 10),
+            Container(height: 14, width: double.infinity, color: Colors.white),
+            const SizedBox(height: 6),
+            Container(height: 14, width: double.infinity, color: Colors.white),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(height: 16, width: 80, color: Colors.white),
+                Container(height: 14, width: 50, color: Colors.white),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
+
+  
+

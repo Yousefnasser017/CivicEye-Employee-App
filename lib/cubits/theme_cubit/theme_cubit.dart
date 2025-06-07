@@ -3,16 +3,22 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeCubit extends Cubit<ThemeMode> {
-  static const _themeKey = 'theme_mode';
+  static const String _themeKey = 'theme_mode';
 
-  ThemeCubit() : super(ThemeMode.system) {
-    _loadTheme();
+  ThemeCubit() : super(ThemeMode.system);
+
+  /// Call this method after creating the cubit to load the saved theme
+  Future<void> init() async {
+    await _loadTheme();
   }
 
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
     final themeIndex = prefs.getInt(_themeKey);
-    if (themeIndex != null) {
+
+    if (themeIndex != null &&
+        themeIndex >= 0 &&
+        themeIndex < ThemeMode.values.length) {
       emit(ThemeMode.values[themeIndex]);
     }
   }

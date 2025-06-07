@@ -9,23 +9,38 @@ class ReportCubit extends Cubit<ReportState> {
 
   ReportCubit() : super(ReportState.initial());
 
-  Future<void> fetchReports() async {
+ Future<void> fetchReports() async {
     try {
       emit(state.copyWith(status: ReportStatus.loading));
 
-      final employee = await LocalStorageHelper.getEmployee();  // جلب ID الموظف من الذاكرة
+      final employee = await LocalStorageHelper.getEmployee();
       final reports = await ReportApi.getReportsByEmployee(employee?.id ?? 0);
 
-      // حساب الإحصائيات
-      int submittedCount = reports.where((report) => report.currentStatus == 'Submitted').length;
-      int inProgressCount = reports.where((report) => report.currentStatus == 'In_Progress').length;
-      int resolvedCount = reports.where((report) => report.currentStatus == 'Resolved').length;
+      // التاريخ الحالي
+      final now = DateTime.now();
 
-      // تحديد البلاغ الجاري
-      ReportModel? currentReport = reports.firstWhereOrNull((report) => report.currentStatus == 'In_Progress');
+      // فلترة بلاغات اليوم فقط
+      final todayReports = reports.where((report) {
+        final createdAt = DateTime.tryParse(report.createdAt as String);
+        return createdAt != null &&
+            createdAt.year == now.year &&
+            createdAt.month == now.month &&
+            createdAt.day == now.day;
+      }).toList();
+
+      // حساب الإحصائيات فقط من بلاغات اليوم
+      int submittedCount =
+          todayReports.where((r) => r.currentStatus == 'Submitted').length;
+      int inProgressCount =
+          todayReports.where((r) => r.currentStatus == 'In_Progress').length;
+      int resolvedCount =
+          todayReports.where((r) => r.currentStatus == 'Resolved').length;
+
+      ReportModel? currentReport = todayReports
+          .firstWhereOrNull((r) => r.currentStatus == 'In_Progress');
 
       emit(state.copyWith(
-        reports: reports,
+        reports: todayReports,
         submittedCount: submittedCount,
         inProgressCount: inProgressCount,
         resolvedCount: resolvedCount,
@@ -33,9 +48,11 @@ class ReportCubit extends Cubit<ReportState> {
         status: ReportStatus.success,
       ));
     } catch (e) {
-      emit(state.copyWith(status: ReportStatus.failure, errorMessage: e.toString()));
+      emit(state.copyWith(
+          status: ReportStatus.failure, errorMessage: e.toString()));
     }
   }
+
 
   Future<void> updateReportStatus(int reportId, String newStatus, String? notes) async {
     try {
