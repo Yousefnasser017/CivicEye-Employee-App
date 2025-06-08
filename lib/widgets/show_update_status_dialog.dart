@@ -1,9 +1,6 @@
 // ignore_for_file: deprecated_member_use
-
-import 'package:civiceye/core/config/websocket.dart';
 import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:civiceye/core/themes/app_colors.dart';
-import 'package:civiceye/cubits/home_cubit/home_cubit.dart';
 import 'package:civiceye/widgets/SnackbarHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,34 +11,44 @@ import 'package:civiceye/models/report_status_enum.dart';
 
 class UpdateStatusDialog extends StatefulWidget {
   final ReportModel report;
+  final void Function(ReportStatus)? onUpdate;
+  const UpdateStatusDialog({
+    super.key,
+    required this.report,
+    this.onUpdate,
+  });
 
-  const UpdateStatusDialog({Key? key, required this.report}) : super(key: key);
-
-  static Future<void> show({
+  static Future<ReportStatus?> show({
     required BuildContext context,
     required ReportModel report,
   }) async {
+    ReportStatus? result;
+
     await showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'تحديث الحالة',
+      barrierLabel: 'Update Status',
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (_, __, ___) {
         return Directionality(
           textDirection: TextDirection.rtl,
-          child: UpdateStatusDialog(report: report),
+          child: UpdateStatusDialog(
+            report: report,
+            onUpdate: (newStatus) {
+              result = newStatus;
+            },
+          ),
         );
       },
-      transitionBuilder: (context, animation, _, child) {
+      transitionBuilder: (ctx, anim, _, child) {
         return ScaleTransition(
-          scale: CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutBack,
-          ),
+          scale: CurvedAnimation(parent: anim, curve: Curves.easeOutBack),
           child: child,
         );
       },
     );
+
+    return result;
   }
 
   @override
@@ -53,7 +60,7 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
   late ReportStatus currentStatus;
   late List<ReportStatus> availableStatuses;
   late ReportStatus selectedStatus;
- late int employeeId;
+int? employeeId;
  bool isEmployeeLoaded = false;
 
 Future<void> _loadEmployeeId() async {
@@ -90,21 +97,12 @@ Future<void> _loadEmployeeId() async {
     final cubit = context.read<ReportDetailCubit>();
 
     return BlocListener<ReportDetailCubit, ReportDetailState>(
-      listener: (context, state) {
-        if (state is ReportDetailUpdated)  {
-          // ✅ إرسال التحديث عبر WebSocket
-          final stompService = context.read<StompWebSocketService>();
-          stompService.sendUpdateStatus(
-            reportId: widget.report.reportId,
-            newStatus: selectedStatus.name,
-            notes: notesController.text.trim(),
-            employeeId: employeeId,
-              
-          );
-        context.read<ReportCubit>().fetchReports();
+     listener: (context, state) {
+        if (state is ReportDetailUpdated) {
           Navigator.of(context).pop();
           SnackBarHelper.show(context, 'تم تحديث الحالة بنجاح',
               type: SnackBarType.success);
+                    
         } else if (state is ReportDetailError) {
           SnackBarHelper.show(context, state.message, type: SnackBarType.error);
         }
@@ -255,7 +253,7 @@ Future<void> _loadEmployeeId() async {
                   const SizedBox(width: 10),
                   Expanded(
                     child: ElevatedButton(
-                     onPressed: (!isEmployeeLoaded ||
+                      onPressed: (employeeId == null ||
                               isLoading ||
                               selectedStatus == currentStatus)
                           ? null
@@ -264,7 +262,7 @@ Future<void> _loadEmployeeId() async {
                                 widget.report,
                                 selectedStatus.name,
                                 notesController.text.trim(),
-                                employeeId,
+                                employeeId!,
                               );
                             },
 

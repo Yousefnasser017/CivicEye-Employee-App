@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -39,22 +40,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late final StompWebSocketService socketService;
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  @override
-  void initState() {
-    super.initState();
-    socketService = StompWebSocketService();
-    socketService.connect(); // اتصال مرة واحدة هنا
-  }
-
-  @override
-  void dispose() {
-    socketService.dispose(); // تنظيف عند الخروج
-    super.dispose();
-  }
 
   Future<String> _getInitialRoute() async {
     final prefs = await SharedPreferences.getInstance();
@@ -62,49 +50,61 @@ class _MyAppState extends State<MyApp> {
     return lastPage ?? '/';
   }
 
-
   @override
   Widget build(BuildContext context) {
-  final socketService = StompWebSocketService()..connect();
-
-    return MultiBlocProvider(
+    return MultiProvider(
       providers: [
-        
-        BlocProvider(
-            create: (_) => LoginCubit(
-                formKey: _formKey,
-                emailController: _emailController,
-                passwordController: _passwordController)),
-        BlocProvider(create: (_) => ThemeCubit()),
-        BlocProvider(create: (_) => ReportsCubit()),
-        BlocProvider(
-          create: (_) => ReportDetailCubit(socketService: socketService),
-        ), // ✅ هنا
-        BlocProvider(create: (_) => ReportCubit()),
-        
+        Provider<StompWebSocketService>(
+          create: (_) {
+            final service = StompWebSocketService();
+            service.connect();
+            return service;
+          },
+          dispose: (_, service) => service.dispose(),
+        ),
       ],
-      child: BlocBuilder<ThemeCubit, ThemeMode>(
-        builder: (context, themeMode) {
-          return FutureBuilder<String>(
-            future: _getInitialRoute(),
-            builder: (context, snapshot) {
-              final initialRoute = snapshot.data ?? '/';
-              return MaterialApp(
-                debugShowCheckedModeBanner: false,
-                title: 'Civic Eye',
-                theme: AppTheme.light,
-                darkTheme: AppTheme.dark,
-                themeMode: themeMode,
-                initialRoute: initialRoute,
-                onGenerateRoute: AppRouter.generateRoute,
-                builder: (context, child) => Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: child!,
-                ),
-              );
-            },
-          );
-        },
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => LoginCubit(
+              formKey: _formKey,
+              emailController: _emailController,
+              passwordController: _passwordController,
+            ),
+          ),
+          BlocProvider(create: (_) => ThemeCubit()),
+          BlocProvider(create: (_) => ReportsCubit()),
+          BlocProvider(
+            create: (context) => ReportDetailCubit(
+              socketService: context.read<StompWebSocketService>(),
+              reportsCubit: context.read<ReportsCubit>(),
+            ),
+          ),
+          BlocProvider(create: (_) => ReportCubit()),
+        ],
+        child: BlocBuilder<ThemeCubit, ThemeMode>(
+          builder: (context, themeMode) {
+            return FutureBuilder<String>(
+              future: _getInitialRoute(),
+              builder: (context, snapshot) {
+                final initialRoute = snapshot.data ?? '/';
+                return MaterialApp(
+                  debugShowCheckedModeBanner: false,
+                  title: 'Civic Eye',
+                  theme: AppTheme.light,
+                  darkTheme: AppTheme.dark,
+                  themeMode: themeMode,
+                  initialRoute: initialRoute,
+                  onGenerateRoute: AppRouter.generateRoute,
+                  builder: (context, child) => Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: child!,
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 
+
+// تعريف enum لحالات البلاغ
 enum ReportStatus {
   Submitted,
   In_Progress,
@@ -10,6 +12,7 @@ enum ReportStatus {
   Cancelled,
 }
 
+// امتداد لتوفير label, color, icon لكل حالة
 extension ReportStatusExtension on ReportStatus {
   String get label {
     switch (this) {
@@ -22,7 +25,7 @@ extension ReportStatusExtension on ReportStatus {
       case ReportStatus.Resolved:
         return 'تم الحل';
       case ReportStatus.Cancelled:
-        return ' إلغاء';
+        return 'إلغاء';
     }
   }
 
@@ -54,5 +57,23 @@ extension ReportStatusExtension on ReportStatus {
       case ReportStatus.Cancelled:
         return Icons.cancel;
     }
+  }
+}
+
+// دالة لتحويل النص إلى حالة enum
+ReportStatus getStatusFromString(String statusString) {
+  switch (statusString) {
+    case 'Submitted':
+      return ReportStatus.Submitted;
+    case 'In_Progress':
+      return ReportStatus.In_Progress;
+    case 'On_Hold':
+      return ReportStatus.On_Hold;
+    case 'Resolved':
+      return ReportStatus.Resolved;
+    case 'Cancelled':
+      return ReportStatus.Cancelled;
+    default:
+      return ReportStatus.Submitted; // حالة افتراضية
   }
 }

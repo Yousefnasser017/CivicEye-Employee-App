@@ -1,3 +1,5 @@
+import 'package:civiceye/core/config/websocket.dart';
+import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:civiceye/cubits/report_cubit/report_detail_cubit.dart';
@@ -12,7 +14,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class ReportDetailsScreen extends StatefulWidget {
   final ReportModel report;
   final String employeeId;
-  
 
   const ReportDetailsScreen({
     Key? key,
@@ -25,22 +26,12 @@ class ReportDetailsScreen extends StatefulWidget {
 }
 
 class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
-  late ReportStatus status;
-  late String timeString;
+  late final ReportsCubit reportsCubit;
 
   @override
   void initState() {
     super.initState();
-    status = ReportStatus.values.firstWhere(
-      (e) => e.name == widget.report.currentStatus,
-      orElse: () => ReportStatus.Submitted,
-    );
-
-    final time = TimeOfDay.fromDateTime(widget.report.createdAt);
-    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
-    final minute = time.minute.toString().padLeft(2, '0');
-    final period = time.period == DayPeriod.am ? "ص" : "م";
-    timeString = "$hour:$minute $period";
+    reportsCubit = context.read<ReportsCubit>();
   }
 
   @override
@@ -48,7 +39,10 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return BlocProvider(
-      create: (context) => ReportDetailCubit(),
+      create: (context) => ReportDetailCubit(
+        reportsCubit: reportsCubit,
+        socketService: StompWebSocketService(),
+      ),
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
@@ -68,15 +62,11 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
         body: BlocConsumer<ReportDetailCubit, ReportDetailState>(
           listener: (context, state) {
             if (state is ReportDetailUpdated) {
+              reportsCubit.updateLocalReport(state.report!);
+
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('✅ تم تحديث الحالة بنجاح')),
               );
-              setState(() {
-                status = ReportStatus.values.firstWhere(
-                  (e) => e.name == widget.report.currentStatus,
-                  orElse: () => ReportStatus.Submitted,
-                );
-              });
             } else if (state is ReportDetailError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('خطأ: ${state.message}')),
@@ -84,6 +74,13 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
             }
           },
           builder: (context, state) {
+            final report = state.report ?? widget.report;
+            final status = ReportStatus.values.firstWhere(
+              (e) => e.name == report.currentStatus,
+              orElse: () => ReportStatus.Submitted,
+            );
+            final timeString = formatTime(report.createdAt);
+
             return Stack(
               children: [
                 SingleChildScrollView(
@@ -91,13 +88,13 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      _buildCard(
+                      InfoCard(
                         icon: Icons.title,
                         label: "عنوان البلاغ",
-                        value: widget.report.title,
+                        value: report.title,
                         isDarkMode: isDarkMode,
                       ),
-                      _buildCard(
+                      InfoCard(
                         icon: Icons.location_on,
                         label: "الموقع",
                         value: "موقع البلاغ على الخريطة",
@@ -106,32 +103,32 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                         trailing:
                             const Icon(Icons.map, color: Color(0xFF725DFE)),
                       ),
-                      _buildCard(
+                      InfoCard(
                         icon: Icons.access_time,
                         label: "الوقت",
                         value: timeString,
                         isDarkMode: isDarkMode,
                       ),
-                      _buildCard(
+                      InfoCard(
                         icon: Icons.calendar_today,
                         label: "تاريخ البلاغ",
                         value:
-                            "${widget.report.createdAt.year}/${widget.report.createdAt.month}/${widget.report.createdAt.day}",
+                            "${report.createdAt.year}/${report.createdAt.month}/${report.createdAt.day}",
                         isDarkMode: isDarkMode,
                       ),
-                      _buildCard(
+                      InfoCard(
                         icon: Icons.description,
                         label: "وصف البلاغ",
-                        value: widget.report.description,
+                        value: report.description,
                         isDarkMode: isDarkMode,
                       ),
-                      _buildCard(
+                      InfoCard(
                         icon: Icons.phone,
                         label: "معلومات الاتصال",
-                        value: widget.report.contactInfo,
+                        value: report.contactInfo,
                         isDarkMode: isDarkMode,
                         onTap: () {
-                          final phone = widget.report.contactInfo;
+                          final phone = report.contactInfo;
                           if (phone != null && phone.trim().isNotEmpty) {
                             showDialog(
                               context: context,
@@ -141,42 +138,33 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                           }
                         },
                       ),
-                      Card(
-                        elevation: 3,
-                        color: isDarkMode ? Colors.grey[800] : Colors.white,
-                        margin: const EdgeInsets.only(bottom: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(12),
-                          leading: Icon(Icons.flag, color: status.color),
-                          title: const Text(
-                            'حالة البلاغ',
-                            textAlign: TextAlign.right,
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            status.label,
-                            style: TextStyle(
-                              color: status.color,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
-                        ),
-                      ),
+
+                      // حالة البلاغ
+                      ReportStatusCard(
+                          reportState: state, defaultStatus: status),
+
                       const SizedBox(height: 20),
+
                       if (status != ReportStatus.Resolved &&
                           status != ReportStatus.Cancelled)
                         Center(
                           child: ElevatedButton(
-                            onPressed: () {
-                              UpdateStatusDialog.show(
+                            onPressed: () async {
+                              final newStatus = await UpdateStatusDialog.show(
                                 context: context,
-                                report: widget.report,
+                                report: report,
                               );
+
+                              if (newStatus != null) {
+                                context
+                                    .read<ReportDetailCubit>()
+                                    .updateReportStatus(
+                                      report,
+                                      newStatus as String,
+                                      report.notes,
+                                      int.parse(widget.employeeId),
+                                    );
+                              }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF725DFE),
@@ -207,14 +195,41 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     );
   }
 
-  Widget _buildCard({
-    required IconData icon,
-    required String label,
-    String? value,
-    required bool isDarkMode,
-    VoidCallback? onTap,
-    Widget? trailing,
-  }) {
+  void _openMap() {
+    final latitude = double.tryParse(widget.report.latitude.toString()) ?? 0.0;
+    final longitude =
+        double.tryParse(widget.report.longitude.toString()) ?? 0.0;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            MapScreen(latitude: latitude, longitude: longitude),
+      ),
+    );
+  }
+}
+
+class InfoCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String? value;
+  final bool isDarkMode;
+  final VoidCallback? onTap;
+  final Widget? trailing;
+
+  const InfoCard({
+    Key? key,
+    required this.icon,
+    required this.label,
+    this.value,
+    required this.isDarkMode,
+    this.onTap,
+    this.trailing,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return Card(
       elevation: 3,
       color: isDarkMode ? Colors.grey[800] : Colors.white,
@@ -245,32 +260,81 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
       ),
     );
   }
+}
 
-  void _openMap() {
-    final latitude = double.tryParse(widget.report.latitude.toString()) ?? 0.0;
-    final longitude =
-        double.tryParse(widget.report.longitude.toString()) ?? 0.0;
+class ReportStatusCard extends StatelessWidget {
+  final ReportDetailState reportState;
+  final ReportStatus defaultStatus;
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            MapScreen(latitude: latitude, longitude: longitude),
+  const ReportStatusCard({
+    Key? key,
+    required this.reportState,
+    required this.defaultStatus,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    if (reportState is ReportDetailLoading) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (reportState is ReportDetailUpdated) {
+      final status = getStatusFromString(reportState.report!.currentStatus);
+      
+      return _buildStatusCard(status, isDarkMode);
+    } else if (reportState is ReportDetailError) {
+      return Center(child: Text((reportState as ReportDetailError).message));
+    } else {
+      return _buildStatusCard(defaultStatus, isDarkMode);
+    }
+  }
+
+  Widget _buildStatusCard(ReportStatus status, bool isDarkMode) {
+    return Card(
+      elevation: 3,
+      color: isDarkMode ? Colors.grey[800] : Colors.white,
+      margin: const EdgeInsets.only(bottom: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(12),
+        leading: Icon(Icons.flag, color: status.color),
+        title: const Text(
+          'حالة البلاغ',
+          textAlign: TextAlign.right,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          status.label,
+          style: TextStyle(
+            color: status.color,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.right,
+        ),
       ),
     );
   }
+}
 
-  Future<String> getAddressFromCoordinates(
-      double latitude, double longitude) async {
-    try {
-      final placemarks = await placemarkFromCoordinates(latitude, longitude);
-      if (placemarks.isNotEmpty) {
-        final place = placemarks.first;
-        return "${place.street}, ${place.locality}, ${place.country}";
-      }
-      return "عنوان غير متاح";
-    } catch (_) {
-      return "فشل في جلب العنوان";
+String formatTime(DateTime datetime) {
+  final time = TimeOfDay.fromDateTime(datetime);
+  final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+  final minute = time.minute.toString().padLeft(2, '0');
+  final period = time.period == DayPeriod.am ? "ص" : "م";
+  return "$hour:$minute $period";
+}
+
+Future<String> getAddressFromCoordinates(
+    double latitude, double longitude) async {
+  try {
+    final placemarks = await placemarkFromCoordinates(latitude, longitude);
+    if (placemarks.isNotEmpty) {
+      final place = placemarks.first;
+      return "${place.street}, ${place.locality}, ${place.country}";
     }
+    return "عنوان غير متاح";
+  } catch (_) {
+    return "فشل في جلب العنوان";
   }
 }

@@ -7,7 +7,7 @@ class ReportModel {
   final String? contactInfo;
   final String department;
   final DateTime createdAt;
-  final String currentStatus;
+  late final String currentStatus;
   final String? cityName;
 
   ReportModel({
@@ -86,6 +86,8 @@ class ReportModel {
       createdAt: DateTime.now(),
       currentStatus: '',
  );
+
+  String? get notes => null;
 }
 
 class UpdateReportStatus {
