@@ -10,11 +10,13 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _positionAnimation;
+  late Timer _dotTimer; // ✅ أضف هذا السطر
   double opacity = 0.0;
   int _dotCount = 0;
 
@@ -23,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     super.initState();
 
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1200), 
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
 
@@ -35,19 +37,21 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       CurvedAnimation(parent: _controller, curve: Curves.easeIn),
     );
 
-    _positionAnimation = Tween<Offset>(begin: const Offset(0, 1), end: const Offset(0, 0))
+    _positionAnimation = Tween<Offset>(
+            begin: const Offset(0, 1), end: const Offset(0, 0))
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
 
     _controller.forward().then((_) {
       Future.delayed(const Duration(seconds: 1), () {
-        setState(() {
-          opacity = 1.0;
-        });
+        if (mounted) {
+          setState(() {
+            opacity = 1.0;
+          });
+        }
       });
     });
 
-    Timer.periodic(const Duration(milliseconds: 500), (timer) {
+    _dotTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
       if (mounted) {
         setState(() {
           _dotCount = (_dotCount + 1) % 4;
@@ -58,10 +62,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   void dispose() {
-    
+    _dotTimer.cancel(); // ✅ أضف هذا السطر لإيقاف التايمر
     _controller.dispose();
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {

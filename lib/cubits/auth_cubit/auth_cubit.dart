@@ -1,4 +1,5 @@
 import 'package:civiceye/core/api/login_service.dart';
+import 'package:civiceye/core/config/websocket.dart';
 import 'package:civiceye/core/error/api_exception.dart';
 import 'package:civiceye/core/error/exceptions.dart';
 import 'package:civiceye/core/storage/cache_helper.dart';
@@ -14,6 +15,8 @@ class LoginCubit extends Cubit<LoginState> {
   final GlobalKey<FormState> formKey;
   final TextEditingController emailController;
   final TextEditingController passwordController;
+ final webSocketService = StompWebSocketService();
+
   bool obscurePassword;
 
   LoginCubit({
@@ -47,7 +50,7 @@ Future<void> login(String email, String password) async {
       if (loginResponse.type != 'Employee') {
         throw ApiException('ليس لديك صلاحية الوصول.', 403);
       }
-      
+      webSocketService.connect();
 
       await _saveUserData(loginResponse);
       emit(LoginSuccess());

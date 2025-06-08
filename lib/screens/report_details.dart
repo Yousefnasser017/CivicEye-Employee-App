@@ -12,6 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class ReportDetailsScreen extends StatefulWidget {
   final ReportModel report;
   final String employeeId;
+  
 
   const ReportDetailsScreen({
     Key? key,

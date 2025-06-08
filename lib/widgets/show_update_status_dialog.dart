@@ -1,6 +1,9 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:civiceye/core/config/websocket.dart';
+import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:civiceye/core/themes/app_colors.dart';
+import 'package:civiceye/cubits/home_cubit/home_cubit.dart';
 import 'package:civiceye/widgets/SnackbarHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,10 +53,20 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
   late ReportStatus currentStatus;
   late List<ReportStatus> availableStatuses;
   late ReportStatus selectedStatus;
+ late int employeeId;
+ bool isEmployeeLoaded = false;
 
+Future<void> _loadEmployeeId() async {
+  final employee = await LocalStorageHelper.getEmployee();
+  setState(() {
+    employeeId = employee?.id ?? 0;
+    isEmployeeLoaded = true;
+  });
+}
   @override
   void initState() {
     super.initState();
+    _loadEmployeeId();
     notesController = TextEditingController();
 
     currentStatus = ReportStatus.values.firstWhere(
@@ -78,13 +91,25 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
 
     return BlocListener<ReportDetailCubit, ReportDetailState>(
       listener: (context, state) {
-        if (state is ReportDetailUpdated) {
+        if (state is ReportDetailUpdated)  {
+          // ✅ إرسال التحديث عبر WebSocket
+          final stompService = context.read<StompWebSocketService>();
+          stompService.sendUpdateStatus(
+            reportId: widget.report.reportId,
+            newStatus: selectedStatus.name,
+            notes: notesController.text.trim(),
+            employeeId: employeeId,
+              
+          );
+        context.read<ReportCubit>().fetchReports();
           Navigator.of(context).pop();
-          SnackBarHelper.show(context, 'تم تحديث الحالة بنجاح', type: SnackBarType.success);
+          SnackBarHelper.show(context, 'تم تحديث الحالة بنجاح',
+              type: SnackBarType.success);
         } else if (state is ReportDetailError) {
           SnackBarHelper.show(context, state.message, type: SnackBarType.error);
         }
       },
+
       child: AlertDialog(
         backgroundColor: Theme.of(context).dialogBackgroundColor,
         shape: RoundedRectangleBorder(
@@ -230,15 +255,19 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: isLoading || selectedStatus == currentStatus
+                     onPressed: (!isEmployeeLoaded ||
+                              isLoading ||
+                              selectedStatus == currentStatus)
                           ? null
                           : () {
                               cubit.updateReportStatus(
                                 widget.report,
                                 selectedStatus.name,
                                 notesController.text.trim(),
+                                employeeId,
                               );
                             },
+
                       style: ElevatedButton.styleFrom(
                         backgroundColor:isLoading
                             ? Colors.white
@@ -300,4 +329,5 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
 
     return available;
   }
+  
 }

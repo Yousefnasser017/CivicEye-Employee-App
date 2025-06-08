@@ -1,3 +1,4 @@
+import 'package:civiceye/core/config/websocket.dart';
 import 'package:civiceye/core/routing/app_roution.dart';
 import 'package:civiceye/core/themes/app_theme.dart';
 import 'package:civiceye/cubits/home_cubit/home_cubit.dart';
@@ -13,7 +14,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-   if (kIsWeb) {
+
+  if (kIsWeb) {
     const FlutterSecureStorage().setOptions(
       const WebOptions(
         dbName: 'my_secure_storage',
@@ -21,40 +23,68 @@ void main() async {
       ),
     );
   }
-  
-  runApp( MyApp());
+
+  runApp(MyApp());
 }
 
 extension on FlutterSecureStorage {
   void setOptions(WebOptions webOptions) {}
 }
 
-class MyApp extends StatelessWidget {
-  MyApp({super.key});
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
 
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final StompWebSocketService socketService;
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    socketService = StompWebSocketService();
+    socketService.connect(); // اتصال مرة واحدة هنا
+  }
+
+  @override
+  void dispose() {
+    socketService.dispose(); // تنظيف عند الخروج
+    super.dispose();
+  }
 
   Future<String> _getInitialRoute() async {
     final prefs = await SharedPreferences.getInstance();
     final lastPage = prefs.getString('last_page');
-    return lastPage ?? '/'; // العودة إلى الصفحة الافتراضية إذا لم يتم تحديد أي صفحة
+    return lastPage ?? '/';
   }
+
 
   @override
   Widget build(BuildContext context) {
+  final socketService = StompWebSocketService()..connect();
+
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => LoginCubit(formKey: _formKey, emailController: _emailController, passwordController: _passwordController)),
+        
+        BlocProvider(
+            create: (_) => LoginCubit(
+                formKey: _formKey,
+                emailController: _emailController,
+                passwordController: _passwordController)),
         BlocProvider(create: (_) => ThemeCubit()),
         BlocProvider(create: (_) => ReportsCubit()),
-        BlocProvider(create: (_) => ReportDetailCubit()),
-        BlocProvider(create: (_) => ReportCubit())
-       
+        BlocProvider(
+          create: (_) => ReportDetailCubit(socketService: socketService),
+        ), // ✅ هنا
+        BlocProvider(create: (_) => ReportCubit()),
+        
       ],
-      child: BlocBuilder<ThemeCubit, ThemeMode>( // تغيير هنا لمتابعة ThemeMode
-        builder: (context, themeMode) { // هنا نتابع themeMode مباشرة من ThemeCubit
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        builder: (context, themeMode) {
           return FutureBuilder<String>(
             future: _getInitialRoute(),
             builder: (context, snapshot) {
@@ -64,7 +94,7 @@ class MyApp extends StatelessWidget {
                 title: 'Civic Eye',
                 theme: AppTheme.light,
                 darkTheme: AppTheme.dark,
-                themeMode: themeMode, // هنا نستخدم themeMode مباشرة
+                themeMode: themeMode,
                 initialRoute: initialRoute,
                 onGenerateRoute: AppRouter.generateRoute,
                 builder: (context, child) => Directionality(
