@@ -260,7 +260,7 @@ class ReportDetailsShimmer extends StatelessWidget {
               // القيمة
               Container(
                 width: double.infinity,
-                height: isDescription ? 60 : 20, // وصف أطول
+                height: isDescription ? 40 : 20, // وصف أطول
                 decoration: BoxDecoration(
                   color: Colors.grey,
                   borderRadius: BorderRadius.circular(4),

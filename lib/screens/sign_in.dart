@@ -29,8 +29,7 @@ class LoginScreen extends StatelessWidget {
           body: BlocConsumer<LoginCubit, LoginState>(
             listener: (context, state) {
               if (state is LoginFailure) {
-                SnackBarHelper.show(context,
-                    state.message, // استخدم الرسالة مباشرة من الـ state
+                SnackBarHelper.show(context, state.message,
                     type: SnackBarType.error);
               }
               if (state is LoginSuccess) {
@@ -38,6 +37,7 @@ class LoginScreen extends StatelessWidget {
                   context.read<ReportsCubit>().clear();
                   SnackBarHelper.show(context, "تم تسجيل الدخول بنجاح",
                       type: SnackBarType.success);
+
                   Navigator.pushReplacementNamed(context, '/home');
                 });
               }
@@ -137,14 +137,14 @@ class LoginScreen extends StatelessWidget {
         obscureText: obscureText,
         decoration: InputDecoration(
           enabledBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color:  AppColors.primary, width: 1.0),
+            borderSide: BorderSide(color: Colors.grey),
           ),
           focusedBorder: const UnderlineInputBorder(
             borderSide: BorderSide(color: AppColors.primary, width: 2.0),
           ),
           labelText: label,
           labelStyle: const TextStyle(
-              color: Colors.black54, fontSize: 18, fontFamily: 'Tajawal'),
+              color: Color.fromARGB(255, 122, 122, 122), fontSize: 18, fontFamily: 'Tajawal'),
           hintText: hint,
           hintStyle: const TextStyle(color: Colors.black54, fontSize: 16),
           prefixIcon: Icon(icon, color: iconColor, size: 24),
@@ -178,38 +178,21 @@ class LoginScreen extends StatelessWidget {
                   );
                 }
               },
-        color: state is LoginLoading ? Colors.grey[300] : AppColors.primary,
+        color: AppColors.primary,
         height: 60,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
         ),
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child: state is LoginLoading
-              ? const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 30,
-                      height:30,
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                        strokeWidth: 3.0,
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                  ],
-                )
-              : const Text(
-                  "الدخول",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Tajawal',
-                  ),
+        child: state is LoginLoading
+            ? const CircularProgressIndicator(color: AppColors.primary)
+            : const Text(
+                "الدخول",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
-        ),
+              ),
       ),
     );
   }

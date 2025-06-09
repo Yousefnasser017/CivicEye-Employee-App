@@ -10,7 +10,7 @@ class StompWebSocketService {
   void connect() {
     _client = StompClient(
       config: StompConfig.sockJS(
-        url: 'http://localhost:9090/ws',
+        url: 'http://192.168.1.2:9090/ws',
         onConnect: _onConnectCallback,
         onWebSocketError: (dynamic error) {
           _connected = false;

@@ -57,14 +57,11 @@ class ReportDetailCubit extends Cubit<ReportDetailState> {
         );
       }
 
-      // **جلب التفاصيل مجدداً من الـ API** بعد التحديث
+
       
       final updatedReport = await ReportApi.getReportDetails(report.reportId);
       reportsCubit.updateLocalReport(updatedReport);
 
-      // قم بتحديث القائمة الرئيسية للبلاغات أيضًا
-      
-      // إصدار حالة التحديث
       emit(ReportDetailUpdated(report: updatedReport));
       return updatedReport;
     } catch (e) {

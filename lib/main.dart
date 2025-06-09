@@ -1,3 +1,4 @@
+import 'package:civiceye/core/config/app_config.dart';
 import 'package:civiceye/core/config/websocket.dart';
 import 'package:civiceye/core/routing/app_roution.dart';
 import 'package:civiceye/core/themes/app_theme.dart';
@@ -24,8 +25,8 @@ void main() async {
       ),
     );
   }
-
-  runApp(MyApp());
+ApiConfig.init();
+  runApp(const MyApp());
 }
 
 extension on FlutterSecureStorage {

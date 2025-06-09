@@ -1,10 +1,14 @@
-class ApiConstants {
-  static const String baseUrl = 'http://localhost:9090/api/V1';
-  static const String login = '$baseUrl/login';
-  static const String logout = '$baseUrl/logout';
-  static  String user = '$baseUrl/user';
-  static String reports(int employeeId) => '$baseUrl/reports/employee/$employeeId';
-  static String reportDetails(int reportId) => '$baseUrl/reports/$reportId';
+import 'package:civiceye/core/config/app_config.dart';
 
-  static const String updateStatus = '$baseUrl/reports/status';
+
+class ApiConstants {
+  static String get baseUrl => ApiConfig.baseUrl;
+
+  static String get login => '$baseUrl/login';
+  static String get logout => '$baseUrl/logout';
+  static String get user => '$baseUrl/user';
+  static String reports(int employeeId) =>
+      '$baseUrl/reports/employee/$employeeId';
+  static String reportDetails(int reportId) => '$baseUrl/reports/$reportId';
+  static String get updateStatus => '$baseUrl/reports/status';
 }
