@@ -76,7 +76,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
   Widget _buildDrawerHeader(Color color) {
     return Container(
-      height: 180,
+      height: double.infinity,
       decoration: BoxDecoration(color: color),
       padding: const EdgeInsets.all(20),
       child: Column(
