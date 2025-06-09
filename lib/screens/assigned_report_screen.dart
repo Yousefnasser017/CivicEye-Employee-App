@@ -117,7 +117,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   Widget _buildStatusFilterBar(ReportsCubit cubit, ColorScheme colorScheme) {
     return SizedBox(
-      height: 50,
+      height: 80,
       child: BlocBuilder<ReportsCubit, ReportsState>(
         builder: (context, state) {
           return ListView.builder(

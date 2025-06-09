@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CallConfirmationDialog extends StatefulWidget {
-  
   final String phone;
 
   const CallConfirmationDialog({super.key, required this.phone});
 
   @override
   State<CallConfirmationDialog> createState() => _CallConfirmationDialogState();
-  
 }
 
 class _CallConfirmationDialogState extends State<CallConfirmationDialog> {
@@ -24,17 +22,24 @@ class _CallConfirmationDialogState extends State<CallConfirmationDialog> {
   }
 
   Future<void> _launchCaller(BuildContext context) async {
+    final cleanPhone = _cleanPhoneNumber(widget.phone);
+
     if (!_isValidPhoneNumber(widget.phone)) {
       _showErrorSnackBar(context, "الرقم المدخل غير صالح: ${widget.phone}");
       return;
     }
 
-    final cleanPhone = _cleanPhoneNumber(widget.phone);
     final Uri callUri = Uri(scheme: 'tel', path: cleanPhone);
 
     try {
       if (await canLaunchUrl(callUri)) {
-        await launchUrl(callUri);
+        final bool launched = await launchUrl(
+          callUri,
+          mode: LaunchMode.externalApplication,
+        );
+        if (!launched) {
+          _showErrorSnackBar(context, "لا يمكن فتح تطبيق الاتصال");
+        }
       } else {
         _showErrorSnackBar(context, "لا يمكن فتح تطبيق الاتصال");
       }
@@ -57,8 +62,7 @@ class _CallConfirmationDialogState extends State<CallConfirmationDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return AlertDialog(
       shape: RoundedRectangleBorder(
@@ -106,7 +110,6 @@ class _CallConfirmationDialogState extends State<CallConfirmationDialog> {
       actions: [
         Row(
           children: [
-            // زر الإلغاء
             Expanded(
               child: OutlinedButton(
                 onPressed: () => Navigator.of(context).pop(),
@@ -118,11 +121,16 @@ class _CallConfirmationDialogState extends State<CallConfirmationDialog> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child:   Text("إلغاء", style: TextStyle(fontSize: 16,color: isDarkMode ? Colors.white : Colors.black)),
+                child: Text(
+                  "إلغاء",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 12),
-            // زر الاتصال
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: () async {

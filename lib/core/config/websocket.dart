@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class StompWebSocketService {
   late StompClient _client;
@@ -7,7 +8,13 @@ class StompWebSocketService {
 
   bool get isConnected => _connected;
 
-  void connect() {
+  void connect() async {
+    final storage = FlutterSecureStorage();
+    final jwtToken = await storage.read(key: 'jwt');
+    if (jwtToken == null) {
+      print('JWT token not found!');
+      return;
+    }
     _client = StompClient(
       config: StompConfig.sockJS(
         url: 'http://192.168.1.2:9090/ws',
@@ -23,9 +30,13 @@ class StompWebSocketService {
           _tryReconnect();
         },
         stompConnectHeaders: {'login': 'guest', 'passcode': 'guest'},
-        webSocketConnectHeaders: {'Origin': '*'},
+        webSocketConnectHeaders: {
+          // 'Origin': '*', // You can remove this if not needed
+          'Cookie': 'jwt=$jwtToken',
+        },
         heartbeatOutgoing: const Duration(seconds: 10),
-        heartbeatIncoming: const Duration(seconds: 10), // محاولة إعادة الاتصال كل 5 ثواني
+        heartbeatIncoming:
+            const Duration(seconds: 10), // محاولة إعادة الاتصال كل 5 ثواني
       ),
     );
 

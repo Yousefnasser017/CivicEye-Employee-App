@@ -7,10 +7,11 @@ import 'package:civiceye/models/sign_in_model.dart';
 import 'package:civiceye/models/user_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthApi {
   static final Dio _dio = DioConsumer.dio;
-  
+
   static Future<LoginResponseModel> login(String email, String password) async {
     try {
       final response = await _dio.post(
@@ -22,6 +23,17 @@ class AuthApi {
       );
 
       if (response.statusCode == 200) {
+        const storage = FlutterSecureStorage();
+        final cookies = response.headers.map['set-cookie'];
+        if (cookies != null) {
+          for (var cookie in cookies) {
+            if (cookie.startsWith('jwt=')) {
+              final jwt = cookie.split(';').first.split('=').last;
+              await storage.write(key: 'jwt', value: jwt);
+              break;
+            }
+          }
+        }
         return LoginResponseModel.fromJson(response.data);
       } else {
         throw ApiException(
@@ -63,7 +75,6 @@ class AuthApi {
       );
     }
   }
-
 
   static Future<bool> logout() async {
     try {

@@ -1,4 +1,3 @@
-
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:civiceye/core/storage/cache_helper.dart';
@@ -48,8 +47,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
             'تم تسجيل الخروج بنجاح',
             type: SnackBarType.success,
           );
-      
-          
         } else if (state is LogoutFailure) {
           SnackBarHelper.show(
             context,
@@ -75,34 +72,34 @@ class _CustomDrawerState extends State<CustomDrawer> {
   }
 
   Widget _buildDrawerHeader(Color color) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final headerHeight = screenHeight * 0.25; // 25% of screen height
+
     return Container(
-      height: double.infinity,
+      height: headerHeight,
+      width: double.infinity,
       decoration: BoxDecoration(color: color),
       padding: const EdgeInsets.all(20),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Center(
-            child: Image.asset(
-              'assets/images/logo-white.png',
-              width: 150,
-              height: 80,
-              fit: BoxFit.contain,
-            ),
+          Image.asset(
+            'assets/images/logo-white.png',
+            width: 150,
+            height: 80,
+            fit: BoxFit.contain,
           ),
           const SizedBox(height: 10),
-          Center(
-            child: Text(
-              'أهلاً، $fullName',
-              style: const TextStyle(
-                color: AppColors.appBarLight,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          Text(
+            'أهلاً، $fullName',
+            style: const TextStyle(
+              color: AppColors.appBarLight,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -162,7 +159,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: ListTile(
-        leading: const Icon(Icons.logout, color: Color.fromARGB(255, 255, 17, 0)),
+        leading:
+            const Icon(Icons.logout, color: Color.fromARGB(255, 255, 17, 0)),
         title: const Text('تسجيل الخروج'),
         onTap: () => _showLogoutConfirmationDialog(context),
       ),
@@ -241,5 +239,4 @@ class _CustomDrawerState extends State<CustomDrawer> {
       ),
     );
   }
-
 }
