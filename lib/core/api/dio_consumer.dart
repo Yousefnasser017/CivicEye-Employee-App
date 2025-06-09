@@ -19,14 +19,16 @@ class DioConsumer {
      if (!kIsWeb) {
      _dio.interceptors.add(CookieManager(cookieJar)); 
     }
-    _dio.interceptors.add(
+  _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
           debugPrint('➡ [${options.method}] ${options.uri}');
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          debugPrint('✅ [${response.statusCode}] ${response.data}');
+          
+          // ✅ خيار بديل: طباعة فقط الكود
+          debugPrint('✅ [${response.statusCode}] Response received');
           return handler.next(response);
         },
         onError: (DioException error, handler) {
@@ -35,6 +37,7 @@ class DioConsumer {
         },
       ),
     );
+
 
     return _dio;
   }

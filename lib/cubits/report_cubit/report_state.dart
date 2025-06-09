@@ -2,7 +2,9 @@ import 'package:civiceye/models/report_model.dart';
 
 // تعريف الـ State لجميع حالات البلاغات
 abstract class ReportsState {
-  const ReportsState();
+    final List<ReportModel> reports;
+
+  ReportsState({this.reports = const []});
 }
 
 // حالة البلاغات المبدئية

@@ -34,30 +34,75 @@ class LoginCubit extends Cubit<LoginState> {
   }
 
 Future<void> login(String email, String password) async {
- if (email.trim().isEmpty || password.trim().isEmpty) {
-    emit(LoginFailure('Email or password cannot be empty'));
-    return;
-  }
+    if (email.trim().isEmpty || password.trim().isEmpty) {
+      emit(LoginFailure('البريد الإلكتروني وكلمة المرور مطلوبان'));
+      return;
+    }
 
     emit(LoginLoading());
 
     try {
-      // final email = emailController.text.trim();
-      // final password = passwordController.text.trim();
-
       final loginResponse = await AuthApi.login(email, password);
 
       if (loginResponse.type != 'Employee') {
-        throw ApiException('ليس لديك صلاحية الوصول.', 403);
+        emit(LoginFailure('ليس لديك صلاحية الوصول لهذا التطبيق'));
+        return;
       }
-      webSocketService.connect();
 
+      webSocketService.connect();
       await _saveUserData(loginResponse);
       emit(LoginSuccess());
     } on ApiException catch (e) {
-      emit(LoginFailure(e.message));
+      // معالجة أخطاء الـ API المخصصة
+      emit(LoginFailure(_handleApiError(e)));
     } catch (e) {
-      emit(LoginFailure(ExceptionHandler.handle(e)));
+      // معالجة الأخطاء العامة
+      emit(LoginFailure(_handleGeneralError(e)));
+    }
+  }
+
+// دالة لمعالجة أخطاء الـ API
+  String _handleApiError(ApiException e) {
+    switch (e.statusCode) {
+      case 401:
+        return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+      case 403:
+        return e.message.isNotEmpty ? e.message : 'ليس لديك صلاحية الوصول';
+      case 404:
+        return 'البريد الإلكتروني غير مسجل في النظام';
+      case 422:
+        return 'بيانات غير صحيحة، تأكد من البريد الإلكتروني وكلمة المرور';
+      case 429:
+        return 'عدد كبير من المحاولات، حاول مرة أخرى بعد قليل';
+      case 500:
+        return 'مشكلة في الخادم، حاول مرة أخرى';
+      case 503:
+        return 'الخدمة غير متاحة حالياً، حاول مرة أخرى لاحقاً';
+      default:
+        return e.message.isNotEmpty ? e.message : 'حدث خطأ غير متوقع';
+    }
+  }
+
+// دالة لمعالجة الأخطاء العامة
+  String _handleGeneralError(dynamic error) {
+    String errorMessage = error.toString().toLowerCase();
+
+    if (errorMessage.contains('socket') ||
+        errorMessage.contains('network') ||
+        errorMessage.contains('connection')) {
+      return 'تأكد من اتصالك بالإنترنت وحاول مرة أخرى';
+    } else if (errorMessage.contains('timeout')) {
+      return 'انتهت مهلة الاتصال، حاول مرة أخرى';
+    } else if (errorMessage.contains('format') ||
+        errorMessage.contains('parse')) {
+      return 'خطأ في تنسيق البيانات';
+    } else {
+      // استخدم الـ ExceptionHandler إذا كان متاح
+      try {
+        return ExceptionHandler.handle(error);
+      } catch (e) {
+        return 'حدث خطأ غير متوقع، حاول مرة أخرى';
+      }
     }
   }
 

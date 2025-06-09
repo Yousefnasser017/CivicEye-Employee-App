@@ -37,9 +37,34 @@ class ReportApi {
       );
     }
   }
+  static Future<ReportModel> getReportDetails(int reportId) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.reportDetails(reportId), // تأكد إنها موجودة عندك
+        options: Options(
+          extra: {'withCredentials': true},
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        return ReportModel.fromJson(response.data);
+      } else {
+        throw ApiException(
+          'Failed to fetch report details',
+          response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiException(
+        ExceptionHandler.handle(e),
+        e.response?.statusCode,
+      );
+    }
+  }
+
 
   /// Update the status of a report
-  static Future<void> updateStatus(
+  static Future<ReportModel?> updateStatus(
     int reportId,
     String newStatus,
     int employeeId, {
@@ -74,5 +99,6 @@ class ReportApi {
         e.response?.statusCode,
       );
     }
+    return null;
   }
 }

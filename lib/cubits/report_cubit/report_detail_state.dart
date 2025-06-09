@@ -34,18 +34,37 @@ class ReportDetailState extends Equatable {
 }
 
 
+
+
 class ReportDetailInitial extends ReportDetailState {}
 
 class ReportDetailLoading extends ReportDetailState {}
 
-class ReportDetailUpdated extends ReportDetailState {
-  final ReportModel updatedReport;
+class ReportDetailUpdating extends ReportDetailState {}
 
-  const ReportDetailUpdated(this.updatedReport);
+class ReportDetailLoaded extends ReportDetailState {
+  final ReportModel report;
+
+  const ReportDetailLoaded({required this.report});
+
+  @override
+  List<Object> get props => [report];
+}
+
+class ReportDetailUpdated extends ReportDetailState {
+  final ReportModel report;
+
+  const ReportDetailUpdated({required this.report});
+
+  @override
+  List<Object> get props => [report];
 }
 
 class ReportDetailError extends ReportDetailState {
   final String message;
 
-  const ReportDetailError(this.message);
+  const ReportDetailError({required this.message});
+
+  @override
+  List<Object> get props => [message];
 }

@@ -14,6 +14,7 @@ import 'package:civiceye/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 class AppRouter {
   static EmployeeModel? employee;
+  static ReportModel? report;
  
    
 
@@ -35,6 +36,7 @@ class AppRouter {
       return MaterialPageRoute(
         builder: (_) => ReportDetailsScreen(
               report: report,
+              reportId: report.reportId,
               employeeId: employee!.id.toString(), // Convert int? to String?
         ),
       );

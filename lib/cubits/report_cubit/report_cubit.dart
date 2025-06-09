@@ -36,7 +36,6 @@ class ReportsCubit extends Cubit<ReportsState> {
 
   int? get employeeId => _employeeId;
 
-  // تحميل رقم الموظف من التخزين المحلي
   Future<void> _loadEmployeeId() async {
     final employee = await LocalStorageHelper.getEmployee();
     _employeeId = employee?.id;
@@ -50,8 +49,7 @@ class ReportsCubit extends Cubit<ReportsState> {
     emit(ReportsInitial());
   }
 
-  // جلب البلاغات كاملة من API وتطبيق الفلاتر المحلية
-Future<void> getReports() async {
+  Future<void> getReports() async {
     try {
       emit(ReportsLoading(report: []));
 
@@ -65,11 +63,9 @@ Future<void> getReports() async {
       _hasMore = true;
       _allReports = await ReportApi.getReportsByEmployee(_employeeId!);
 
-      // تحقق من وجود أكثر من بلاغ في حالة In_Progress
       final inProgressReports =
           _allReports.where((r) => r.currentStatus == 'In_Progress').toList();
       if (inProgressReports.length > 1) {
-        // نغير حالة البلاغات الإضافية إلى On_Hold (يمكنك تعديل الحالة حسب السياسة)
         for (int i = 1; i < inProgressReports.length; i++) {
           _allReports = _allReports.map((report) {
             if (report.reportId == inProgressReports[i].reportId) {
@@ -82,7 +78,6 @@ Future<void> getReports() async {
 
       final filtered = _applyFilter(_allReports);
 
-      // خذ أول بلاغ في In_Progress أو فارغ إذا لا يوجد
       final inProgressReport = _allReports.firstWhere(
         (r) => r.currentStatus == 'In_Progress',
         orElse: () => ReportModel.empty(),
@@ -104,13 +99,11 @@ Future<void> getReports() async {
     }
   }
 
-  // تطبيق فلتر الحالة على قائمة البلاغات
   List<ReportModel> _applyFilter(List<ReportModel> allReports) {
     if (selectedStatus == 'All') return allReports;
     return allReports.where((r) => r.currentStatus == selectedStatus).toList();
   }
 
-  // حساب عدد البلاغات حسب الحالة
   Map<String, int> _calculateReportCounts(List<ReportModel> reports) {
     final counts = <String, int>{};
     for (var status in statusFilters) {
@@ -124,13 +117,11 @@ Future<void> getReports() async {
     return counts;
   }
 
-  // تغيير فلتر الحالة وإعادة جلب البلاغات مع الفلترة
   Future<void> filterByStatus(String status) async {
     selectedStatus = status;
     await getReports();
   }
 
-  // تحميل المزيد من البلاغات (Pagination)
   Future<void> loadMoreReports() async {
     if (!_hasMore) return;
     if (state is! ReportsLoaded) return;
@@ -157,23 +148,21 @@ Future<void> getReports() async {
     }
   }
 
-  // تحديث حالة البلاغ في الـ API ثم تحديث الحالة محليًا بالكامل
-  Future<void> updateReportStatus({
+  Future<ReportModel?> updateReportStatus({
     required int reportId,
     required String newStatus,
     required String notes,
   }) async {
     final currentState = state;
-    if (currentState is! ReportsLoaded) return;
+    if (currentState is! ReportsLoaded) return null;
 
-    // تحقق من وجود بلاغ In_Progress آخر غير البلاغ الجاري إذا كان التحديث لـ In_Progress
     if (newStatus == 'In_Progress') {
       final hasOtherInProgress = _allReports.any(
           (r) => r.currentStatus == 'In_Progress' && r.reportId != reportId);
       if (hasOtherInProgress) {
-        emit( ReportsError(
+        emit(ReportsError(
             message: 'لا يمكن وجود أكثر من بلاغ في حالة قيد التنفيذ'));
-        return;
+        return null;
       }
     }
 
@@ -183,7 +172,6 @@ Future<void> getReports() async {
       await ReportApi.updateStatus(reportId, newStatus, _employeeId!,
           notes: notes);
 
-      // تحديث _allReports أيضاً
       _allReports = _allReports.map((report) {
         if (report.reportId == reportId) {
           return report.copyWith(currentStatus: newStatus);
@@ -210,13 +198,14 @@ Future<void> getReports() async {
         latestReports: latestReports,
         reportCountsByStatus: reportCounts,
       ));
+      return inProgressReport;
     } catch (e) {
       emit(ReportsError(message: 'حدث خطأ أثناء تحديث حالة البلاغ'));
+      return null;
     }
   }
 
   void updateLocalReport(ReportModel updatedReport) {
-    // منع وجود أكثر من بلاغ في حالة In_Progress
     if (updatedReport.currentStatus == 'In_Progress') {
       final hasOtherInProgress = _allReports.any(
         (r) =>
@@ -224,7 +213,6 @@ Future<void> getReports() async {
             r.reportId != updatedReport.reportId,
       );
       if (hasOtherInProgress) {
-        // لا نقوم بتحديث الحالة لأن هناك بلاغ آخر قيد التنفيذ
         emit(ReportsError(
             message: 'لا يمكن وجود أكثر من بلاغ في حالة قيد التنفيذ'));
         return;
@@ -237,10 +225,8 @@ Future<void> getReports() async {
       _allReports[index] = updatedReport;
     }
 
-    // تحديث القائمة المعروضة حسب الفلتر الحالي
     final filtered = _applyFilter(_allReports);
 
-    // إعادة حساب الإحصائيات
     final inProgressReport = _allReports.firstWhere(
       (r) => r.currentStatus == 'In_Progress',
       orElse: () => ReportModel.empty(),
@@ -257,5 +243,4 @@ Future<void> getReports() async {
       reportCountsByStatus: reportCounts,
     ));
   }
-
 }

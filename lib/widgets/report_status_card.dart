@@ -1,101 +1,98 @@
+// report_status_card.dart
+
+import 'package:civiceye/models/report_status_enum.dart';
 import 'package:flutter/material.dart';
-import 'package:civiceye/core/themes/app_colors.dart';
+import 'package:shimmer/shimmer.dart'; // ⭐️ استيراد مكتبة Shimmer
 
-class StatsCard extends StatelessWidget {
-  final String title;
-  final int count;
-  final String statusKey;
-  final VoidCallback onTap;
+class ReportStatusCard extends StatelessWidget {
+  final ReportStatus status;
+  final bool isLoading; // ⭐️ إضافة متغير لتحديد ما إذا كان يتم التحميل
 
-  const StatsCard({
-    super.key,
-    required this.title,
-    required this.count,
-    required this.statusKey,
-    required this.onTap,
-  });
-
-  IconData _getStatusIcon() {
-    switch (statusKey) {
-      case 'Submitted':
-        return Icons.mark_email_unread;
-      case 'In_Progress':
-        return Icons.sync;
-      case 'Resolved':
-        return Icons.check_circle_outline;
-      case 'On_Hold':
-        return Icons.pause_circle_outline;
-      case 'Cancelled':
-        return Icons.cancel_outlined;
-      default:
-        return Icons.report;
-    }
-  }
+  const ReportStatusCard({
+    Key? key,
+    required this.status,
+    this.isLoading = false, // ⭐️ قيمة افتراضية false
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.all(14),
-        width: MediaQuery.of(context).size.width / 2 - 20,
-        decoration: BoxDecoration(
-          color: isDarkMode ? Colors.white10 : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primary.withOpacity(0.5)),
-          boxShadow: [
-            if (!isDarkMode)
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                blurRadius: 6,
-                offset: const Offset(0, 4),
-              )
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(_getStatusIcon(), size: 28, color: AppColors.primary),
-            const SizedBox(height: 10),
-            Text(title,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    )),
-            const SizedBox(height: 4),
-            Text(
-              '${convertToArabicNumbers(count)} بلاغ',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
+    final statusColor = status.color;
+    final statusText = status.label;
+    final statusIcon = status.icon;
+
+    // ⭐️ الشرط: إذا كان isLoading صحيحًا، اعرض Shimmer
+    if (isLoading) {
+      return Shimmer.fromColors(
+        baseColor: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+        highlightColor: isDarkMode ? Colors.grey[600]! : Colors.grey[100]!,
+        child: Card(
+          elevation: 3,
+          color: isDarkMode ? Colors.grey[800] : Colors.white,
+          margin: const EdgeInsets.only(bottom: 10, top: 10),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(12),
+            leading: CircleAvatar(
+              radius: 20,
+              backgroundColor:
+                  Colors.white.withOpacity(0.5), // Placeholder for icon
             ),
-          ],
+            title: Align(
+              alignment: Alignment.centerRight, // محاذاة لليمين
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.4,
+                height: 16.0,
+                color: Colors.white.withOpacity(0.5), // Placeholder for text
+              ),
+            ),
+            subtitle: Align(
+              alignment: Alignment.centerRight, // محاذاة لليمين
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.6,
+                height: 16.0,
+                margin: const EdgeInsets.only(top: 4),
+                color: Colors.white.withOpacity(0.5), // Placeholder for text
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // الكود الأصلي الذي يعرض البطاقة العادية عندما لا يكون هناك تحميل
+    return Card(
+      elevation: 3,
+      color: isDarkMode ? Colors.grey[800] : Colors.white,
+      margin: const EdgeInsets.only(bottom: 10, top: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(12),
+        leading: Icon(
+          statusIcon,
+          color: statusColor,
+          size: 28,
+        ),
+        title: Text(
+          "حالة البلاغ",
+          textAlign: TextAlign.right,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
+        subtitle: Text(
+          statusText,
+          textAlign: TextAlign.right,
+          style: TextStyle(
+            color: statusColor,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
   }
-}
-
-String convertToArabicNumbers(int number) {
-  const englishToArabicDigits = {
-    '0': '٠',
-    '1': '١',
-    '2': '٢',
-    '3': '٣',
-    '4': '٤',
-    '5': '٥',
-    '6': '٦',
-    '7': '٧',
-    '8': '٨',
-    '9': '٩',
-  };
-
-  return number
-      .toString()
-      .split('')
-      .map((digit) => englishToArabicDigits[digit] ?? digit)
-      .join();
 }

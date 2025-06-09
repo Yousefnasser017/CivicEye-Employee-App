@@ -25,23 +25,23 @@ class LoginScreen extends StatelessWidget {
       child: Theme(
         data: ThemeData.light(),
         child: Scaffold(
+          backgroundColor: Colors.white,
           body: BlocConsumer<LoginCubit, LoginState>(
-              listener: (context, state) {
-          
+            listener: (context, state) {
               if (state is LoginFailure) {
-                SnackBarHelper.show(context, state.message,type: SnackBarType.error );
+                SnackBarHelper.show(context,
+                    state.message, // استخدم الرسالة مباشرة من الـ state
+                    type: SnackBarType.error);
               }
-           if (state is LoginSuccess) {
-                
+              if (state is LoginSuccess) {
                 Future.microtask(() async {
                   context.read<ReportsCubit>().clear();
                   SnackBarHelper.show(context, "تم تسجيل الدخول بنجاح",
                       type: SnackBarType.success);
-
                   Navigator.pushReplacementNamed(context, '/home');
                 });
               }
-            },  
+            },
             builder: (context, state) {
               final cubit = context.read<LoginCubit>();
               return Directionality(
@@ -52,7 +52,8 @@ class LoginScreen extends StatelessWidget {
                     child: Column(
                       children: [
                         const SizedBox(height: 40),
-                        Image.asset('assets/images/logo-black.png', height: 100),
+                        Image.asset('assets/images/logo-black.png',
+                            height: 100),
                         const SizedBox(height: 10),
                         const Text(
                           "مرحبا بك",
@@ -75,27 +76,32 @@ class LoginScreen extends StatelessWidget {
                                 isPassword: false,
                                 controller: _emailController,
                                 validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'أدخل البريد الإلكتروني';
-                                    }
-                                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                                      return 'بريد إلكتروني غير صالح';
-                                    }
-                                    return null;
-                                  },
+                                  if (value == null || value.isEmpty) {
+                                    return 'أدخل البريد الإلكتروني';
+                                  }
+                                  if (!RegExp(
+                                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                                      .hasMatch(value)) {
+                                    return 'بريد إلكتروني غير صالح';
+                                  }
+                                  return null;
+                                },
                                 hint: "example@gmail.com",
                               ),
                               _buildTextField(
                                 label: "كلمة المرور",
                                 icon: Icons.lock_outline,
-                                iconColor:AppColors.primary,
+                                iconColor: AppColors.primary,
                                 isPassword: true,
                                 controller: _passwordController,
                                 validator: (value) =>
-                                    value == null || value.isEmpty ? 'أدخل كلمة المرور' : null,
+                                    value == null || value.isEmpty
+                                        ? 'أدخل كلمة المرور'
+                                        : null,
                                 hint: "******",
                                 obscureText: cubit.obscurePassword,
-                                toggleObscureText: cubit.togglePasswordVisibility,
+                                toggleObscureText:
+                                    cubit.togglePasswordVisibility,
                               ),
                               _buildLoginButton(context, cubit, state),
                             ],
@@ -121,7 +127,8 @@ class LoginScreen extends StatelessWidget {
     required String? Function(String?) validator,
     required String hint,
     bool obscureText = false,
-    VoidCallback? toggleObscureText, required  iconColor,
+    VoidCallback? toggleObscureText,
+    required iconColor,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),
@@ -130,64 +137,80 @@ class LoginScreen extends StatelessWidget {
         obscureText: obscureText,
         decoration: InputDecoration(
           enabledBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.grey),
+            borderSide: BorderSide(color:  AppColors.primary, width: 1.0),
           ),
           focusedBorder: const UnderlineInputBorder(
             borderSide: BorderSide(color: AppColors.primary, width: 2.0),
           ),
           labelText: label,
           labelStyle: const TextStyle(
-              color: Colors.grey, fontSize: 18, fontFamily: 'Tajawal'),
+              color: Colors.black54, fontSize: 18, fontFamily: 'Tajawal'),
           hintText: hint,
           hintStyle: const TextStyle(color: Colors.black54, fontSize: 16),
           prefixIcon: Icon(icon, color: iconColor, size: 24),
           suffixIcon: isPassword
-                    ? IconButton(
-                        onPressed: toggleObscureText,
-                        icon: Icon(
-                            obscureText ? Icons.visibility_off : Icons.visibility,
-                            color: AppColors.primary),
-                      )
-                    : null,
-                        ),  
+              ? IconButton(
+                  onPressed: toggleObscureText,
+                  icon: Icon(
+                      obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: AppColors.primary),
+                )
+              : null,
+        ),
         validator: validator,
       ),
     );
   }
 
-Widget _buildLoginButton(
-    BuildContext context, LoginCubit cubit, LoginState state) {
-  return Container(
-    width: double.infinity,
-    margin: const EdgeInsets.all(10),
-    child: MaterialButton(
-      onPressed: state is LoginLoading
-          ? null
-          : () {
-              if (_formKey.currentState!.validate()) {
-                cubit.login(
-                  _emailController.text.trim(), 
-                  _passwordController.text.trim(),
-                );
-              }
-            },
-      color: AppColors.primary,
-      height: 60,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(30),
+  Widget _buildLoginButton(
+      BuildContext context, LoginCubit cubit, LoginState state) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.all(10),
+      child: MaterialButton(
+        onPressed: state is LoginLoading
+            ? null
+            : () {
+                if (_formKey.currentState!.validate()) {
+                  cubit.login(
+                    _emailController.text.trim(),
+                    _passwordController.text.trim(),
+                  );
+                }
+              },
+        color: state is LoginLoading ? Colors.grey[300] : AppColors.primary,
+        height: 60,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: state is LoginLoading
+              ? const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 30,
+                      height:30,
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                        strokeWidth: 3.0,
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                  ],
+                )
+              : const Text(
+                  "الدخول",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Tajawal',
+                  ),
+                ),
+        ),
       ),
-      child: state is LoginLoading
-          ? const CircularProgressIndicator(color: AppColors.primary)
-          : const Text(
-              "الدخول",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-    ),
-  );
-}
-
+    );
+  }
 }

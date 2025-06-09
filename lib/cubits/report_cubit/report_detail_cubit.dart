@@ -1,11 +1,9 @@
 import 'package:civiceye/core/api/report_service.dart';
 import 'package:civiceye/core/config/websocket.dart';
 import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
-// import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:civiceye/cubits/report_cubit/report_detail_state.dart';
 import 'package:civiceye/models/report_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 
 class ReportDetailCubit extends Cubit<ReportDetailState> {
   final StompWebSocketService? socketService;
@@ -13,23 +11,29 @@ class ReportDetailCubit extends Cubit<ReportDetailState> {
 
   ReportDetailCubit({
     this.socketService,
-    required this.reportsCubit, // اجعلها مطلوبة
-  }) : super(const ReportDetailState(isLoading: true));
+    required this.reportsCubit,
+  }) : super(ReportDetailInitial());
 
-  void setReport(ReportModel report) {
-    emit(state.copyWith(report: report, isLoading: false));
+  Future<void> fetchReportDetails(int reportId) async {
+    emit(ReportDetailLoading());
+    try {
+      final report = await ReportApi.getReportDetails(reportId);
+      emit(ReportDetailLoaded(report: report));
+    } catch (e) {
+      emit(const ReportDetailError(
+          message: 'فشل في تحميل تفاصيل البلاغ. حاول لاحقًا.'));
+    }
   }
 
-// داخل ReportDetailCubit
-  Future<void> updateReportStatus(
+  Future<ReportModel?> updateReportStatus(
     ReportModel report,
     String newStatus,
     String? notes,
     int employeeId,
   ) async {
+    if (isClosed) return null;
+    emit(state.copyWith(isStatusUpdating: true, error: null));
     try {
-      emit(ReportDetailLoading());
-
       final updateStatus = UpdateReportStatus(
         employeeId: employeeId,
         newStatus: newStatus,
@@ -44,7 +48,7 @@ class ReportDetailCubit extends Cubit<ReportDetailState> {
         notes: updateStatus.notes,
       );
 
-      if (socketService != null && socketService!.isConnected) {
+      if (socketService?.isConnected == true) {
         socketService!.sendUpdateStatus(
           reportId: updateStatus.reportId,
           newStatus: updateStatus.newStatus,
@@ -53,19 +57,33 @@ class ReportDetailCubit extends Cubit<ReportDetailState> {
         );
       }
 
-      final updatedReport = report.copyWith(currentStatus: newStatus);
-      emit(ReportDetailUpdated(updatedReport));
+      // **جلب التفاصيل مجدداً من الـ API** بعد التحديث
+      
+      final updatedReport = await ReportApi.getReportDetails(report.reportId);
       reportsCubit.updateLocalReport(updatedReport);
+
+      // قم بتحديث القائمة الرئيسية للبلاغات أيضًا
+      
+      // إصدار حالة التحديث
+      emit(ReportDetailUpdated(report: updatedReport));
+      return updatedReport;
     } catch (e) {
-      emit(ReportDetailError('فشل في تحديث الحالة: $e'));
+      if (isClosed) return null;
+      emit(const ReportDetailError(message: 'فشل في تحديث الحالة'));
+      return null;
     }
   }
 
-
-  // Future<int> _getEmployeeId() async {
-  //   final employee = await LocalStorageHelper.getEmployee();
-  //   return employee?.id ?? 0;
+  // void setupWebSocketListener() {
+  //   socketService?.onStatusUpdate((updatedStatusData) {
+  //     // تأكد من ان الرسالة تخص البلاغ الحالي
+  //     if (updatedStatusData.reportId == state.report?.reportId) {
+  //       final updatedReport =
+  //           state.report?.copyWith(currentStatus: updatedStatusData.newStatus);
+  //       if (updatedReport != null) {
+  //         emit(state.copyWith(report: updatedReport));
+  //       }
+  //     }
+  //   });
   // }
 }
-
-

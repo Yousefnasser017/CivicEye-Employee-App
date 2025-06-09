@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:civiceye/core/themes/app_colors.dart';
 import 'package:civiceye/widgets/SnackbarHelper.dart';
 import 'package:flutter/material.dart';
@@ -11,20 +9,20 @@ import 'package:civiceye/models/report_status_enum.dart';
 
 class UpdateStatusDialog extends StatefulWidget {
   final ReportModel report;
-  final void Function(ReportStatus)? onUpdate;
+  final int employeeId;
+
   const UpdateStatusDialog({
     super.key,
     required this.report,
-    this.onUpdate,
+    required this.employeeId,
   });
 
   static Future<ReportStatus?> show({
     required BuildContext context,
     required ReportModel report,
+    required int employeeId,
   }) async {
-    ReportStatus? result;
-
-    await showGeneralDialog(
+    final result = await showGeneralDialog<ReportStatus?>(
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Update Status',
@@ -34,9 +32,7 @@ class UpdateStatusDialog extends StatefulWidget {
           textDirection: TextDirection.rtl,
           child: UpdateStatusDialog(
             report: report,
-            onUpdate: (newStatus) {
-              result = newStatus;
-            },
+            employeeId: employeeId,
           ),
         );
       },
@@ -60,20 +56,10 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
   late ReportStatus currentStatus;
   late List<ReportStatus> availableStatuses;
   late ReportStatus selectedStatus;
-int? employeeId;
- bool isEmployeeLoaded = false;
 
-Future<void> _loadEmployeeId() async {
-  final employee = await LocalStorageHelper.getEmployee();
-  setState(() {
-    employeeId = employee?.id ?? 0;
-    isEmployeeLoaded = true;
-  });
-}
   @override
   void initState() {
     super.initState();
-    _loadEmployeeId();
     notesController = TextEditingController();
 
     currentStatus = ReportStatus.values.firstWhere(
@@ -82,7 +68,8 @@ Future<void> _loadEmployeeId() async {
     );
 
     availableStatuses = _getAvailableStatuses(currentStatus);
-    selectedStatus = availableStatuses.isNotEmpty ? availableStatuses.first : currentStatus;
+    selectedStatus =
+        availableStatuses.isNotEmpty ? availableStatuses.first : currentStatus;
   }
 
   @override
@@ -97,208 +84,236 @@ Future<void> _loadEmployeeId() async {
     final cubit = context.read<ReportDetailCubit>();
 
     return BlocListener<ReportDetailCubit, ReportDetailState>(
-     listener: (context, state) {
+      listener: (context, state) {
         if (state is ReportDetailUpdated) {
-          Navigator.of(context).pop();
-          SnackBarHelper.show(context, 'تم تحديث الحالة بنجاح',
-              type: SnackBarType.success);
-                    
+          Navigator.of(context).pop(selectedStatus);
         } else if (state is ReportDetailError) {
           SnackBarHelper.show(context, state.message, type: SnackBarType.error);
         }
       },
-
-      child: AlertDialog(
-        backgroundColor: Theme.of(context).dialogBackgroundColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-        contentPadding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Center(
-              child: Text(
-                'تحديث حالة البلاغ',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+      child: Center(
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.85,
+          constraints: const BoxConstraints(
+            maxWidth: 450,
+            minWidth: 340,
+          ),
+          child: AlertDialog(
+            backgroundColor: Theme.of(context).dialogBackgroundColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: currentStatus.color.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(currentStatus.icon, size: 16, color: currentStatus.color),
-                  const SizedBox(width: 6),
-                  Text(
-                    'الحالة الحالية: ${currentStatus.label}',
+            titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+            contentPadding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Center(
+                  child: Text(
+                    'تحديث حالة البلاغ',
                     style: TextStyle(
-                      fontSize: 13,
-                      color: currentStatus.color,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.grey.shade300),
                 ),
-                child: DropdownButton<ReportStatus>(
-                  dropdownColor: Theme.of(context).cardColor,
-                  isExpanded: true,
-                  value: selectedStatus,
-                  underline: const SizedBox(),
-                  icon: const Icon(Icons.arrow_drop_down),
-                  items: availableStatuses.map((status) {
-                    return DropdownMenuItem<ReportStatus>(
-                      value: status,
-                      child: Row(
-                        children: [
-                          Icon(status.icon, color: status.color, size: 18),
-                          const SizedBox(width: 8),
-                          Text(status.label),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    if (newValue != null) {
-                      setState(() => selectedStatus = newValue);
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              if (selectedStatus != currentStatus)
-                Row(
-                  children: [
-                    const Icon(Icons.arrow_forward, size: 18),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'سيتم التحديث إلى: ${selectedStatus.label}',
+                const SizedBox(height: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: currentStatus.color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(currentStatus.icon,
+                          size: 16, color: currentStatus.color),
+                      const SizedBox(width: 6),
+                      Text(
+                        'الحالة الحالية: ${currentStatus.label}',
                         style: TextStyle(
-                          color: selectedStatus.color,
-                          fontWeight: FontWeight.bold,
                           fontSize: 13,
+                          color: currentStatus.color,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: DropdownButton<ReportStatus>(
+                        dropdownColor: Theme.of(context).cardColor,
+                        isExpanded: true,
+                        value: selectedStatus,
+                        underline: const SizedBox(),
+                        icon: const Icon(Icons.arrow_drop_down),
+                        items: availableStatuses.map((status) {
+                          return DropdownMenuItem<ReportStatus>(
+                            value: status,
+                            child: Row(
+                              children: [
+                                Icon(status.icon,
+                                    color: status.color, size: 18),
+                                const SizedBox(width: 8),
+                                Text(status.label),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          if (newValue != null) {
+                            setState(() => selectedStatus = newValue);
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 20,
+                      child: selectedStatus != currentStatus
+                          ? Row(
+                              children: [
+                                const Icon(Icons.arrow_forward, size: 18),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    'سيتم التحديث إلى: ${selectedStatus.label}',
+                                    style: TextStyle(
+                                      color: selectedStatus.color,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const SizedBox(),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: notesController,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Theme.of(context).cardColor,
+                        hintText: 'أدخل ملاحظاتك هنا...',
+                        hintStyle: TextStyle(
+                          color: isDarkMode ? Colors.white : Colors.black54,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                      ),
+                      maxLines: 3,
                     ),
                   ],
                 ),
-              const SizedBox(height: 16),
-
-              TextField(
-                controller: notesController,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Theme.of(context).cardColor,
-                  hintText: 'أدخل ملاحظاتك هنا...',
-                  hintStyle: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black54,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                ),
-                maxLines: 3,
+              ),
+            ),
+            actions: [
+              BlocBuilder<ReportDetailCubit, ReportDetailState>(
+                builder: (context, state) {
+                  final isStatusUpdating = state.isStatusUpdating;
+                  return SizedBox(
+                    width: double.maxFinite,
+                    height: 45,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 45,
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.of(context).pop(null),
+                              style: OutlinedButton.styleFrom(
+                                side:
+                                    const BorderSide(color: AppColors.primary),
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text(
+                                'إلغاء',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: SizedBox(
+                            height: 45,
+                            child: ElevatedButton(
+                              onPressed: (isStatusUpdating ||
+                                      selectedStatus == currentStatus)
+                                  ? null
+                                  : () {
+                                      cubit.updateReportStatus(
+                                        widget.report,
+                                        selectedStatus.name,
+                                        notesController.text.trim(),
+                                        widget.employeeId,
+                                      );
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isStatusUpdating
+                                    ? Colors.white
+                                    : const Color(0xFF725DFE),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: isStatusUpdating
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                        backgroundColor: AppColors.primary,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'تحديث',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ],
           ),
         ),
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        actions: [
-          BlocBuilder<ReportDetailCubit, ReportDetailState>(
-            builder: (context, state) {
-              final isLoading = state is ReportDetailLoading;
-              return Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color:AppColors.primary),
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          
-                        ),
-                      ),
-                      child: const Text('إلغاء'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: (employeeId == null ||
-                              isLoading ||
-                              selectedStatus == currentStatus)
-                          ? null
-                          : () {
-                              cubit.updateReportStatus(
-                                widget.report,
-                                selectedStatus.name,
-                                notesController.text.trim(),
-                                employeeId!,
-                              );
-                            },
-
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:isLoading
-                            ? Colors.white
-                            : const Color(0xFF725DFE),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                                backgroundColor: AppColors.primary,
-                            
-                              ),
-                            )
-                          : const Text(
-                              'تحديث',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
       ),
     );
   }
@@ -327,5 +342,4 @@ Future<void> _loadEmployeeId() async {
 
     return available;
   }
-  
 }

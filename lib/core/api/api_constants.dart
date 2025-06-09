@@ -4,5 +4,7 @@ class ApiConstants {
   static const String logout = '$baseUrl/logout';
   static  String user = '$baseUrl/user';
   static String reports(int employeeId) => '$baseUrl/reports/employee/$employeeId';
+  static String reportDetails(int reportId) => '$baseUrl/reports/$reportId';
+
   static const String updateStatus = '$baseUrl/reports/status';
 }

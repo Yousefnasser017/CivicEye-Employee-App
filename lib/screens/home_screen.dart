@@ -6,11 +6,11 @@ import 'package:civiceye/screens/report_details.dart';
 import 'package:civiceye/widgets/custom_AppBar.dart';
 import 'package:civiceye/widgets/custom_Drawer.dart';
 import 'package:civiceye/widgets/custom_bottomNavBar.dart';
-import 'package:civiceye/widgets/report_status_card.dart';
+import 'package:civiceye/widgets/loading_shimmer.dart';
+import 'package:civiceye/widgets/report_count.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:timeago/timeago.dart' show ArMessages;
 
@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: BlocBuilder<ReportsCubit, ReportsState>(
         builder: (context, state) {
           if (state is ReportsLoading) {
-            return _buildFullScreenShimmer(context);
+            return const HomeScreenShimmer();
           }
 
           if (state is ReportsError) {
@@ -193,6 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         context,
                                         ReportDetailsScreen(
                                           report: report,
+                                          reportId: report.reportId,
                                           employeeId: context
                                                   .read<ReportsCubit>()
                                                   .employeeId
@@ -261,6 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
             context,
             ReportDetailsScreen(
               report: report,
+              reportId: report.reportId,
               employeeId:
                   context.read<ReportsCubit>().employeeId?.toString() ?? '',
             ),
@@ -289,23 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-Widget _buildFullScreenShimmer(BuildContext context) {
-    final size = MediaQuery.of(context).size;
 
-    return Shimmer.fromColors(
-      baseColor: Colors.grey.shade300,
-      highlightColor: Colors.grey.shade100,
-      child: Container(
-        width: size.width,
-        height: size.height,
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.grey,
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
-    );
-  }
 
   void _navigateTo(BuildContext context, Widget page) {
     Navigator.push(

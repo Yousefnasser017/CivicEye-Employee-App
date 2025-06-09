@@ -173,6 +173,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               MaterialPageRoute(
                 builder: (_) => ReportDetailsScreen(
                   report: report,
+                  reportId: report.reportId,
                   employeeId:
                       context.read<ReportsCubit>().employeeId?.toString() ?? '',
                 ),
