@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'package:civiceye/core/config/app_config.dart';
 import 'package:civiceye/core/config/websocket.dart';
 import 'package:civiceye/core/routing/app_roution.dart';

@@ -44,7 +44,12 @@ class LocalStorageHelper {
       level: [],
     );
   }
-
+  static Future<String?> getJwtToken() async {
+    return await _storage.read(key: 'jwt');
+  }
+  static Future<void> saveJwtToken(String token) async {
+    await _storage.write(key: 'jwt', value: token);
+  }
   static Future<void> saveLastPage(String route) async {
     await _storage.write(key: 'last_page', value: route);
   }

@@ -86,18 +86,19 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                 _currentReport = state.report;
                 _isUpdatingStatus = false;
               });
+                 
             } else if (state is ReportDetailUpdating) {
               setState(() {
                 _isUpdatingStatus = true;
               });
-               SnackBarHelper.show(context, 'تم تحديث الحالة بنجاح',
-                  type: SnackBarType.success);
+           
             } else if (state is ReportDetailUpdated) {
               setState(() {
                 _currentReport = state.report;
                 _isUpdatingStatus = false;
               });
-            
+             SnackBarHelper.show(context, 'تم تحديث الحالة بنجاح',
+                  type: SnackBarType.success);
             } else if (state is ReportDetailError) {
               setState(() {
                 _isUpdatingStatus = false;

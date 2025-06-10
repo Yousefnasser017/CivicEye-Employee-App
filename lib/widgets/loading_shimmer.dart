@@ -4,30 +4,30 @@ import 'package:shimmer/shimmer.dart';
 class HomeScreenShimmer extends StatelessWidget {
   const HomeScreenShimmer({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        // Shimmer للبلاغ الجاري حالياً
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                // عنوان "البلاغ الجاري حالياً"
-                _buildTitleShimmer(width: 150),
-                const SizedBox(height: 12),
-                // الخط الفاصل
-                _buildDividerShimmer(),
-                const SizedBox(height: 12),
-                // كارد البلاغ الجاري
-                _buildCardShimmer(height: 80),
-              ],
-            ),
+@override
+Widget build(BuildContext context) {
+  final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+  final baseColor = isDarkMode ? Colors.grey[700]! : Colors.grey[300]!;
+  final highlightColor = isDarkMode ? Colors.grey[500]! : Colors.grey[100]!;
+
+  return CustomScrollView(
+    slivers: [
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              _buildTitleShimmer(width: 150, baseColor: baseColor, highlightColor: highlightColor),
+              const SizedBox(height: 12),
+              _buildDividerShimmer(baseColor: baseColor, highlightColor: highlightColor),
+              const SizedBox(height: 12),
+              _buildCardShimmer(height: 80, baseColor: baseColor, highlightColor: highlightColor),
+            ],
           ),
         ),
+      ),
 
         // Shimmer لإحصائيات البلاغات
         SliverToBoxAdapter(
@@ -37,13 +37,17 @@ class HomeScreenShimmer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // عنوان "إحصائيات البلاغات"
-                _buildTitleShimmer(width: 120),
+                _buildTitleShimmer(width: 120,
+                  baseColor: baseColor,
+                  highlightColor: highlightColor),
                 const SizedBox(height: 12),
                 // الخط الفاصل
-                _buildDividerShimmer(),
+                _buildDividerShimmer(
+                  baseColor: baseColor, highlightColor: highlightColor),
                 const SizedBox(height: 12),
                 // شبكة الإحصائيات
-                _buildStatsGridShimmer(),
+                _buildStatsGridShimmer(
+                  baseColor: baseColor, highlightColor: highlightColor),
               ],
             ),
           ),
@@ -57,13 +61,17 @@ class HomeScreenShimmer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // عنوان "أحدث البلاغات"
-                _buildTitleShimmer(width: 100),
+                _buildTitleShimmer(width: 100,
+                  baseColor: baseColor,
+                  highlightColor: highlightColor),
                 const SizedBox(height: 12),
                 // الخط الفاصل
-                _buildDividerShimmer(),
+                _buildDividerShimmer(
+                  baseColor: baseColor, highlightColor: highlightColor),
                 const SizedBox(height: 12),
                 // قائمة البلاغات
-                _buildReportsListShimmer(),
+                _buildReportsListShimmer(
+                  baseColor: baseColor, highlightColor: highlightColor),
               ],
             ),
           ),
@@ -72,86 +80,107 @@ class HomeScreenShimmer extends StatelessWidget {
     );
   }
 
-  Widget _buildTitleShimmer({required double width}) {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey.shade300,
-      highlightColor: Colors.grey.shade100,
-      child: Container(
-        height: 24,
-        width: width,
-        decoration: BoxDecoration(
-          color: Colors.grey,
-          borderRadius: BorderRadius.circular(4),
-        ),
+Widget _buildTitleShimmer({
+  required double width,
+  required Color baseColor,
+  required Color highlightColor,
+}) {
+  return Shimmer.fromColors(
+    baseColor: baseColor,
+    highlightColor: highlightColor,
+    child: Container(
+      height: 24,
+      width: width,
+      decoration: BoxDecoration(
+        color: baseColor,
+        borderRadius: BorderRadius.circular(4),
       ),
-    );
-  }
-
-  Widget _buildDividerShimmer() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey.shade300,
-      highlightColor: Colors.grey.shade100,
-      child: Container(
-        height: 1,
-        width: double.infinity,
-        color: Colors.grey,
-      ),
-    );
-  }
-
-  Widget _buildCardShimmer({required double height}) {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey.shade300,
-      highlightColor: Colors.grey.shade100,
-      child: Container(
-        height: height,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.grey,
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatsGridShimmer() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 1.3,
-      ),
-      itemCount: 4, // عدد الكروت المتوقعة
-      itemBuilder: (context, index) {
-        return Shimmer.fromColors(
-          baseColor: Colors.grey.shade300,
-          highlightColor: Colors.grey.shade100,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.grey,
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildReportsListShimmer() {
-    return Column(
-      children: List.generate(
-        3, // عدد البلاغات المتوقعة
-        (index) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: _buildCardShimmer(height: 70),
-        ),
-      ),
-    );
-  }
+    ),
+  );
 }
+
+
+Widget _buildDividerShimmer({
+  required Color baseColor,
+  required Color highlightColor,
+}) {
+  return Shimmer.fromColors(
+    baseColor: baseColor,
+    highlightColor: highlightColor,
+    child: Container(
+      height: 1,
+      width: double.infinity,
+      color: baseColor,
+    ),
+  );
+}
+
+Widget _buildCardShimmer({
+  required double height,
+  required Color baseColor,
+  required Color highlightColor,
+}) {
+  return Shimmer.fromColors(
+    baseColor: baseColor,
+    highlightColor: highlightColor,
+    child: Container(
+      height: height,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: baseColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
+  );
+}
+
+
+Widget _buildStatsGridShimmer({
+  required Color baseColor,
+  required Color highlightColor,
+}) {
+  return GridView.builder(
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 2,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1.3,
+    ),
+    itemCount: 4,
+    itemBuilder: (context, index) {
+      return Shimmer.fromColors(
+        baseColor: baseColor,
+        highlightColor: highlightColor,
+        child: Container(
+          decoration: BoxDecoration(
+            color: baseColor,
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildReportsListShimmer({
+  required Color baseColor,
+  required Color highlightColor,
+}) {
+  return Column(
+    children: List.generate(
+      3,
+      (index) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: _buildCardShimmer(
+            height: 70, baseColor: baseColor, highlightColor: highlightColor),
+      ),
+    ),
+  );
+}
+}
+
 class ReportDetailsShimmer extends StatelessWidget {
   final bool isDarkMode;
 
@@ -345,3 +374,5 @@ class ReportDetailsShimmer extends StatelessWidget {
     );
   }
 }
+
+

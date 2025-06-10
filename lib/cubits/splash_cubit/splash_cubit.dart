@@ -1,19 +1,20 @@
+import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 
 part 'splash_state.dart';
 
 class SplashCubit extends Cubit<SplashState> {
   SplashCubit() : super(SplashInitial());
 
-  final _storage = const FlutterSecureStorage();
-
   Future<void> checkLoginStatus() async {
     await Future.delayed(const Duration(seconds: 2)); // Animation duration
-    final username = await _storage.read(key: 'username');
-    final isLoggedIn = await _storage.read(key: 'isLoggedIn');
 
-    if (username != null && isLoggedIn == 'true') {
+    // استخدم LocalStorageHelper بدلاً من FlutterSecureStorage مباشرة
+    final isLoggedIn = await LocalStorageHelper.getLoginState();
+    final employee = await LocalStorageHelper.getEmployee();
+
+    if (isLoggedIn && employee != null) {
       emit(SplashNavigateToHome());
     } else {
       emit(SplashNavigateToLogin());

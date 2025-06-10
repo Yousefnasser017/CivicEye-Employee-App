@@ -50,36 +50,47 @@ class _CustomDrawerState extends State<CustomDrawer> {
         } else if (state is LogoutFailure) {
           SnackBarHelper.show(
             context,
-            'فشل في تسجيل الخروج: ${state.errorMessage}',
+            'فشل في تسجيل الخروج: \${state.errorMessage}',
             type: SnackBarType.error,
           );
         }
       },
       child: Drawer(
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildDrawerHeader(Theme.of(context).primaryColor),
-              _buildMenuItems(context),
-              const Spacer(),
-              _buildLogoutButton(context),
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildDrawerHeader(),
+            Expanded(
+              child: Container(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: Column(
+                  children: [
+                    _buildMenuItems(context),
+                    const Spacer(),
+                    SafeArea(
+                      bottom: true,
+                      top: false,
+                      left: false,
+                      right: false,
+                      child: _buildLogoutButton(context),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildDrawerHeader(Color color) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final headerHeight = screenHeight * 0.25; // 25% of screen height
-
+  Widget _buildDrawerHeader() {
     return Container(
-      height: headerHeight,
-      width: double.infinity,
-      decoration: BoxDecoration(color: color),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.only(top: 48, left: 20, right: 20, bottom: 20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -156,14 +167,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
   }
 
   Widget _buildLogoutButton(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: ListTile(
-        leading:
-            const Icon(Icons.logout, color: Color.fromARGB(255, 255, 17, 0)),
-        title: const Text('تسجيل الخروج'),
-        onTap: () => _showLogoutConfirmationDialog(context),
-      ),
+    return ListTile(
+      leading: const Icon(Icons.logout, color: Color.fromARGB(255, 255, 17, 0)),
+      title: const Text('تسجيل الخروج'),
+      onTap: () => _showLogoutConfirmationDialog(context),
     );
   }
 
@@ -217,11 +224,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     final cubit = context.read<LoginCubit>();
                     await cubit.logout();
                     context.read<ReportsCubit>().clear();
+                    
 
                     if (!context.mounted) return;
 
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => LoginScreen()),
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
                       (route) => false,
                     );
                   },

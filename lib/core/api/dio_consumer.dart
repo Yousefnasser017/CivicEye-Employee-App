@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 
 class DioConsumer {
@@ -15,20 +16,25 @@ class DioConsumer {
     ..options.extra['withCredentials'] = true;
 
   static final CookieJar cookieJar = CookieJar();
-  static Dio get dio {
-    _dio.interceptors.clear(); // منع التكرار
-     if (!kIsWeb) {
-     _dio.interceptors.add(CookieManager(cookieJar)); 
+ static Dio get dio {
+    _dio.interceptors.clear();
+
+    if (!kIsWeb) {
+      _dio.interceptors.add(CookieManager(cookieJar));
     }
-  _dio.interceptors.add(
+
+    _dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (options, handler) {
+        onRequest: (options, handler) async {
+          const storage = FlutterSecureStorage();
+          final jwt = await storage.read(key: 'jwt');
+          if (jwt != null) {
+            options.headers['Cookie'] = 'jwt=$jwt';
+          }
           debugPrint('➡ [${options.method}] ${options.uri}');
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          
-          // ✅ خيار بديل: طباعة فقط الكود
           debugPrint('✅ [${response.statusCode}] Response received');
           return handler.next(response);
         },
@@ -38,7 +44,6 @@ class DioConsumer {
         },
       ),
     );
-
 
     return _dio;
   }

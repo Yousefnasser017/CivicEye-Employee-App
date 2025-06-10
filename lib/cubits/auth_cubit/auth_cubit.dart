@@ -53,7 +53,22 @@ class LoginCubit extends Cubit<LoginState> {
       webSocketService.connect();
 
       await _saveUserData(loginResponse);
-      emit(LoginSuccess());
+      final userDataResponse = await AuthApi.getUserData();
+      final data = userDataResponse.data;
+      
+      final employee = EmployeeModel(
+        id: data['id'],
+        fullName: data['fullName'],
+        email: loginResponse.username,
+        department: data['department'],
+        cityName: data['cityName'],
+        governorateName: data['governorateName'],
+        nationalId: '',
+        firstName: '',
+        lastName: '',
+        level: [],
+      );
+      emit(LoginSuccess(employee));
     } on ApiException catch (e) {
       emit(LoginFailure(e.message));
     } catch (e) {

@@ -1,3 +1,4 @@
+import 'package:civiceye/models/user_model.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class LoginState extends Equatable {
@@ -9,7 +10,10 @@ class LoginInitial extends LoginState {}
 
 class LoginLoading extends LoginState {}
 
-class LoginSuccess extends LoginState {}
+class LoginSuccess extends LoginState {
+  final EmployeeModel employee;
+  LoginSuccess(this.employee);
+}
 
 class LoginFailure extends LoginState {
   final String message;

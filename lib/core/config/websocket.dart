@@ -9,7 +9,7 @@ class StompWebSocketService {
   bool get isConnected => _connected;
 
   void connect() async {
-    final storage = FlutterSecureStorage();
+    const storage = FlutterSecureStorage();
     final jwtToken = await storage.read(key: 'jwt');
     if (jwtToken == null) {
       print('JWT token not found!');
