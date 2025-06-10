@@ -68,6 +68,7 @@ class LoginCubit extends Cubit<LoginState> {
         lastName: '',
         level: [],
       );
+        await LocalStorageHelper.setLoginState(true);
       emit(LoginSuccess(employee));
     } on ApiException catch (e) {
       emit(LoginFailure(e.message));

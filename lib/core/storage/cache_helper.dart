@@ -57,6 +57,9 @@ class LocalStorageHelper {
   static Future<String?> getLastPage() async {
     return _storage.read(key: 'last_page');
   }
+  static Future<void> setLoginState(bool isLoggedIn) async {
+    await _storage.write(key: 'isLoggedIn', value: isLoggedIn.toString());
+  }
 
   static Future<void> saveLoginState(bool isLoggedIn) async {
     await _storage.write(key: 'isLoggedIn', value: isLoggedIn.toString());

@@ -28,7 +28,9 @@ void main() async {
     );
   }
 ApiConfig.init();
-  runApp(const MyApp());
+  final webSocketService = StompWebSocketService();
+  webSocketService.connect();
+  runApp( MyApp());
 }
 
 extension on FlutterSecureStorage {
@@ -36,17 +38,35 @@ extension on FlutterSecureStorage {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
   @override
-  State<MyApp> createState() => _MyAppState();
+  _MyAppState createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  final StompWebSocketService _webSocketService = StompWebSocketService();
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _webSocketService.connect();
+  }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && !_webSocketService.isConnected) {
+      _webSocketService.connect();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _webSocketService.dispose();
+    super.dispose();
+  }
   Future<String> _getInitialRoute() async {
     final prefs = await SharedPreferences.getInstance();
     final lastPage = prefs.getString('last_page');

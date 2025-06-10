@@ -1,8 +1,15 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class StompWebSocketService {
+  static final StompWebSocketService _instance =
+      StompWebSocketService._internal();
+  factory StompWebSocketService() => _instance;
+  StompWebSocketService._internal();
+
   late StompClient _client;
   bool _connected = false;
 
