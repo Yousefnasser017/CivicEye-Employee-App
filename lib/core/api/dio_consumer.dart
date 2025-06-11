@@ -5,14 +5,12 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-
 class DioConsumer {
   static final Dio _dio = Dio()
-    ..options.baseUrl = ApiConfig.baseUrl // استبدل بـ URL الخاص بـ API الخاص بك
+    ..options.baseUrl = ApiConfig.baseUrl
     ..options.connectTimeout = const Duration(seconds: 30)
     ..options.receiveTimeout = const Duration(seconds: 30)
     ..options.sendTimeout= const Duration(seconds: 40)
-
     ..options.extra['withCredentials'] = true;
 
   static final CookieJar cookieJar = CookieJar();

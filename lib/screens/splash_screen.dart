@@ -15,7 +15,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late SplashAnimations splashAnimations;
-  late Timer _dotTimer; // ✅ أضف هذا السطر
+  late Timer _dotTimer; 
   double opacity = 0.0;
   int _dotCount = 0;
 
@@ -51,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _dotTimer.cancel(); // ✅ أضف هذا السطر لإيقاف التايمر
+    _dotTimer.cancel(); 
     _controller.dispose();
     super.dispose();
   }

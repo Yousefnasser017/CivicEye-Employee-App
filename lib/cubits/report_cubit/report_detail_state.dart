@@ -43,6 +43,7 @@ class ReportDetailLoading extends ReportDetailState {}
 class ReportDetailUpdating extends ReportDetailState {}
 
 class ReportDetailLoaded extends ReportDetailState {
+  @override
   final ReportModel report;
 
   const ReportDetailLoaded({required this.report});
@@ -52,6 +53,7 @@ class ReportDetailLoaded extends ReportDetailState {
 }
 
 class ReportDetailUpdated extends ReportDetailState {
+  @override
   final ReportModel report;
 
   const ReportDetailUpdated({required this.report});

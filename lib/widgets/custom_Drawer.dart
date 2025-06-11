@@ -1,4 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
 
 import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:civiceye/core/themes/app_colors.dart';

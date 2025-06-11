@@ -134,7 +134,7 @@ class _CallConfirmationDialogState extends State<CallConfirmationDialog> {
                               SnackBarHelper.show(
                                   context, "تم نسخ الرقم إلى الحافظة",
                                   type: SnackBarType.success,
-                                  duration: Duration(seconds: 2));
+                                  duration: const Duration(seconds: 2));
                               setState(() => copied = true);
                               await Future.delayed(const Duration(seconds: 1));
                               setState(() => copied = false);

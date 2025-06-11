@@ -57,8 +57,7 @@ class ReportDetailCubit extends Cubit<ReportDetailState> {
         );
       }
 
-
-      
+      // تحديث البيانات بعد نجاح العملية
       final updatedReport = await ReportApi.getReportDetails(report.reportId);
       reportsCubit.updateLocalReport(updatedReport);
 
@@ -67,7 +66,7 @@ class ReportDetailCubit extends Cubit<ReportDetailState> {
     } catch (e) {
       if (isClosed) return null;
       emit(const ReportDetailError(message: 'فشل في تحديث الحالة'));
-      return null;
+      return null; // مهم للـ Optimistic Update في الواجهة
     }
   }
 

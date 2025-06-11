@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'package:civiceye/animations/home_screen_animation.dart';
 import 'package:civiceye/core/themes/app_colors.dart';
 import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
@@ -13,13 +14,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:timeago/timeago.dart' show ArMessages;
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
-
 class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
@@ -70,29 +69,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 slivers: [
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                           const SizedBox(height: 16), // مسافة جيدة فوق العنوان
-                            Text(
+                          const SizedBox(height: 16),
+                          Text(
                             '  البلاغ الجاري حالياً',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary, // لون مميز
-                                  fontSize: 20, // حجم أكبر
-                                ),
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                              fontSize: 20,
+                            ),
                           ),
-                          const SizedBox(height: 12), // مسافة جيدة تحت العنوان
-                          Divider(
-                              color: AppColors.primary.withOpacity(0.5),
-                              thickness: 1),
-                          inProgressReport != null &&
-                                  inProgressReport.title.trim().isNotEmpty
+                          const SizedBox(height: 12),
+                          Divider(color: AppColors.primary.withOpacity(0.5), thickness: 1),
+                          inProgressReport != null && inProgressReport.title.trim().isNotEmpty
                               ? _buildInProgressCard(context, inProgressReport)
                               : _buildEmptyMessage('لا يوجد بلاغ جاري حالياً'),
                         ],
@@ -101,27 +93,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                      Text(
+                          Text(
                             'إحصائيات البلاغات',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary, // لون مميز
-                                  fontSize: 20, // حجم أكبر
-                                ),
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                              fontSize: 20,
+                            ),
                           ),
-                          const SizedBox(height: 12), // مسافة جيدة تحت العنوان
-                          Divider(
-                              color: AppColors.primary.withOpacity(0.5),
-                              thickness: 1),
-                          const SizedBox(height: 12), // مسافة جيدة تحت الخط
+                          const SizedBox(height: 12),
+                          Divider(color: AppColors.primary.withOpacity(0.5), thickness: 1),
+                          const SizedBox(height: 12),
                           GridView.count(
                             crossAxisCount: 2,
                             shrinkWrap: true,
@@ -133,12 +119,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 .where((e) => e.key != 'Cancelled')
                                 .map((entry) => StatsCard(
                                       statusKey: entry.key,
-                                      title: ReportsCubit
-                                              .statusLabels[entry.key] ??
-                                          entry.key,
+                                      title: ReportsCubit.statusLabels[entry.key] ?? entry.key,
                                       count: entry.value,
-                                      onTap: () => _navigateTo(
-                                          context, const ReportsScreen()),
+                                      onTap: () => _navigateTo(context, const ReportsScreen()),
                                     ))
                                 .toList(),
                           ),
@@ -148,57 +131,40 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                        Text(
+                          Text(
                             'أحدث البلاغات',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary, // لون مميز
-                                  fontSize: 20, // حجم أكبر
-                                ),
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                              fontSize: 20,
+                            ),
                           ),
-                          const SizedBox(height: 12), // مسافة جيدة تحت العنوان
-                          Divider(
-                              color: AppColors.primary.withOpacity(0.5),
-                              thickness: 1),
+                          const SizedBox(height: 12),
+                          Divider(color: AppColors.primary.withOpacity(0.5), thickness: 1),
                           if (state.latestReports.isNotEmpty)
                             ...state.latestReports.map((report) => Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 4),
+                                  padding: const EdgeInsets.symmetric(vertical: 4),
                                   child: Card(
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                     child: ListTile(
                                       title: Text(report.title),
                                       subtitle: Text(
-                                        timeago.format(report.createdAt,
-                                            locale: 'ar'),
+                                        timeago.format(report.createdAt, locale: 'ar'),
                                         style: TextStyle(
-                                          color: isDarkMode
-                                              ? Colors.white70
-                                              : Colors.grey[700],
+                                          color: isDarkMode ? Colors.white70 : Colors.grey[700],
                                         ),
                                       ),
-                                      trailing: const Icon(Icons.chevron_right,
-                                          color: AppColors.primary),
+                                      trailing: const Icon(Icons.chevron_right, color: AppColors.primary),
                                       onTap: () => _navigateTo(
                                         context,
                                         ReportDetailsScreen(
                                           report: report,
                                           reportId: report.reportId,
-                                          employeeId: context
-                                                  .read<ReportsCubit>()
-                                                  .employeeId
-                                                  ?.toString() ??
-                                              '',
+                                          employeeId: context.read<ReportsCubit>().employeeId?.toString() ?? '',
                                         ),
                                       ),
                                     ),
@@ -250,8 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        title: Text(report.title,
-            style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(report.title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(
           'تاريخ البلاغ: ${DateFormat('dd/MM/yyyy').format(report.createdAt)}',
           style: Theme.of(context).textTheme.bodySmall,
@@ -263,14 +228,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ReportDetailsScreen(
               report: report,
               reportId: report.reportId,
-              employeeId:
-                  context.read<ReportsCubit>().employeeId?.toString() ?? '',
+              employeeId: context.read<ReportsCubit>().employeeId?.toString() ?? '',
             ),
           ),
         ),
       ),
     );
-
   }
 
   Widget _buildEmptyMessage(String text) {
@@ -285,13 +248,11 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Center(
         child: Text(
           text,
-          style:  TextStyle(color: isDarkMode ?  Colors.white : Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(color: isDarkMode ? Colors.white : Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
     );
   }
-
-
 
   void _navigateTo(BuildContext context, Widget page) {
     Navigator.push(
@@ -302,10 +263,8 @@ class _HomeScreenState extends State<HomeScreen> {
         transitionsBuilder: (_, animation, __, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
-          final tween = Tween(begin: begin, end: end)
-              .chain(CurveTween(curve: Curves.easeInOut));
-          return SlideTransition(
-              position: animation.drive(tween), child: child);
+          final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOut));
+          return SlideTransition(position: animation.drive(tween), child: child);
         },
       ),
     );

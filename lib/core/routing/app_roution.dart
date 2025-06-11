@@ -15,11 +15,6 @@ import 'package:flutter/material.dart';
 class AppRouter {
   static EmployeeModel? employee;
   static ReportModel? report;
- 
-   
-
-  
-
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {

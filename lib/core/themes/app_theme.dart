@@ -2,7 +2,6 @@ import 'package:civiceye/core/themes/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // ThemeData for light mode
   static final ThemeData light = ThemeData(
     fontFamily: 'Tajawal',
     brightness: Brightness.light,
@@ -68,7 +67,6 @@ class AppTheme {
     ),
   );
 
-  // ThemeData for dark mode
   static final ThemeData dark = ThemeData(
     fontFamily: 'Tajawal',
     brightness: Brightness.dark,

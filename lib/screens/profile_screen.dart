@@ -27,12 +27,14 @@ class ProfileScreen extends StatelessWidget {
               bottomNavigationBar: CustomBottomNavBar(
                 currentIndex: 2,
                 onTap: (index) {
-                  if (index == 0)
+                  if (index == 0) {
                     Navigator.of(context)
                         .pushReplacement(_createRoute('/home'));
-                  if (index == 1)
+                  }
+                  if (index == 1) {
                     Navigator.of(context)
                         .pushReplacement(_createRoute('/reports'));
+                  }
                 },
               ),
               body: _buildProfileBody(state, context),
@@ -166,11 +168,11 @@ class ProfileScreen extends StatelessWidget {
   Widget _getScreenForRoute(String routeName) {
     switch (routeName) {
       case '/home':
-        return const HomeScreen(); // استبدل بـ HomeScreen()
+        return const HomeScreen();
       case '/reports':
-        return const ReportsScreen(); // استبدل بـ ReportsScreen()
+        return const ReportsScreen();
       default:
-        return const Scaffold(body: Center(child: Text("404")));
+        return const Scaffold(body: Center(child: Text("Not Found 404")));
     }
   }
 }

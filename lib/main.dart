@@ -1,4 +1,4 @@
-// ignore_for_file: depend_on_referenced_packages
+// ignore_for_file: depend_on_referenced_packages, library_private_types_in_public_api
 
 import 'package:civiceye/core/config/app_config.dart';
 import 'package:civiceye/core/config/websocket.dart';
@@ -38,6 +38,8 @@ extension on FlutterSecureStorage {
 }
 
 class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
   @override
   _MyAppState createState() => _MyAppState();
 }

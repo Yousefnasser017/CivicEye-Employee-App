@@ -8,7 +8,7 @@ class ApiConfig {
     if (kIsWeb) {
       baseUrl = 'http://localhost:9090/api/V1';
     } else if (Platform.isAndroid || Platform.isIOS) {
-      baseUrl = 'http://192.168.1.2:9090/api/V1'; // ← غيره إلى IP جهازك
+      baseUrl = 'http://192.168.1.2:9090/api/V1'; 
     } else {
       baseUrl = 'http://localhost:9090/api/V1';
     }

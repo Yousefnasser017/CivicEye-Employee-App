@@ -28,7 +28,7 @@ class StompWebSocketService {
         onConnect: _onConnectCallback,
         onWebSocketError: (dynamic error) {
           _connected = false;
-          print('❌ WebSocket error: $error');
+          print(' WebSocket error: $error');
           _tryReconnect();
         },
         onDisconnect: (frame) {
@@ -38,12 +38,11 @@ class StompWebSocketService {
         },
         stompConnectHeaders: {'login': 'guest', 'passcode': 'guest'},
         webSocketConnectHeaders: {
-          // 'Origin': '*', // You can remove this if not needed
           'Cookie': 'jwt=$jwtToken',
         },
-        heartbeatOutgoing: const Duration(seconds: 10),
+        heartbeatOutgoing: const Duration(seconds: 5),
         heartbeatIncoming:
-            const Duration(seconds: 10), // محاولة إعادة الاتصال كل 5 ثواني
+            const Duration(seconds: 5), 
       ),
     );
 
@@ -52,14 +51,14 @@ class StompWebSocketService {
 
   void _onConnectCallback(StompFrame frame) {
     _connected = true;
-    print('✅ STOMP connected');
+    print('STOMP connected');
   }
 
   void _tryReconnect() {
     if (!_connected) {
       Future.delayed(const Duration(seconds: 5), () {
         if (!_connected) {
-          print('🔄 Trying to reconnect to WebSocket...');
+          print(' Trying to reconnect to WebSocket...');
           connect();
         }
       });
@@ -73,7 +72,7 @@ class StompWebSocketService {
     required int employeeId,
   }) {
     if (!_connected) {
-      print('⚠️ WebSocket not connected. Skipping send.');
+      print('WebSocket not connected. Skipping send.');
       return;
     }
 
@@ -90,7 +89,7 @@ class StompWebSocketService {
       headers: {'content-type': 'application/json'},
     );
 
-    print('📤 Sent WebSocket updateStatus: $data');
+    print(' Sent WebSocket updateStatus: $data');
   }
 
   void dispose() {

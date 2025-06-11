@@ -7,7 +7,6 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   final _storage = const FlutterSecureStorage();
 
-  // Load the user's profile data
   Future<void> loadProfile() async {
     emit(ProfileLoading());
     try {
@@ -16,13 +15,7 @@ class ProfileCubit extends Cubit<ProfileState> {
       final cityName = await _storage.read(key: 'cityName') ?? '';
       final governorateName = await _storage.read(key: 'governorateName') ?? '';
       final email = await _storage.read(key: 'username') ?? '';
-      // Print values to debug
-      print('City: $cityName, Governorate: $governorateName');
-      print('Address: $cityName - $governorateName');
-
-      // Fetch reports for progress calculation
-
-
+      
       emit(ProfileLoaded(
         fullName: fullName,
         email: email,

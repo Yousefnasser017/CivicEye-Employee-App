@@ -86,24 +86,22 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                 _currentReport = state.report;
                 _isUpdatingStatus = false;
               });
-                 
             } else if (state is ReportDetailUpdating) {
               setState(() {
                 _isUpdatingStatus = true;
               });
-           
             } else if (state is ReportDetailUpdated) {
               setState(() {
                 _currentReport = state.report;
                 _isUpdatingStatus = false;
               });
-             SnackBarHelper.show(context, 'تم تحديث الحالة بنجاح',
+              SnackBarHelper.show(context, 'تم تحديث الحالة بنجاح',
                   type: SnackBarType.success);
             } else if (state is ReportDetailError) {
               setState(() {
                 _isUpdatingStatus = false;
               });
-          SnackBarHelper.show(context, state.message,
+              SnackBarHelper.show(context, state.message,
                   type: SnackBarType.error);
             }
           },
@@ -183,19 +181,16 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                       status != ReportStatus.Cancelled)
                     Center(
                       child: ElevatedButton(
-                         onPressed: () async {
-                          // ⭐️ احصل على الحالة الحالية لـ ReportsCubit
+                        onPressed: () async {
                           final currentReportsState =
                               context.read<ReportsCubit>().state;
                           if (currentReportsState is ReportsLoaded) {
-                            // تحقق مما إذا كان هناك بلاغ In_Progress آخر غير البلاغ الحالي
                           }
 
                           final newStatus = await UpdateStatusDialog.show(
                             context: context,
                             report: displayReport,
                             employeeId: int.parse(widget.employeeId),
-                            // ⭐️ تمرير هذه المعلومة الجديدة
                           );
 
                           if (newStatus != null &&

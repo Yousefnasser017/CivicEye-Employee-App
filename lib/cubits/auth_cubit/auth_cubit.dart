@@ -42,9 +42,6 @@ class LoginCubit extends Cubit<LoginState> {
     emit(LoginLoading());
 
     try {
-      // final email = emailController.text.trim();
-      // final password = passwordController.text.trim();
-
       final loginResponse = await AuthApi.login(email, password);
 
       if (loginResponse.type != 'Employee') {
@@ -78,7 +75,6 @@ class LoginCubit extends Cubit<LoginState> {
   }
 
   Future<void> _saveUserData(LoginResponseModel loginResponse) async {
-    // ... (نفس الكود السابق)
     await _storage.write(key: 'username', value: loginResponse.username);
 
     final userDataResponse = await AuthApi.getUserData();
@@ -91,8 +87,8 @@ class LoginCubit extends Cubit<LoginState> {
       department: data['department'],
       cityName: data['cityName'],
       governorateName: data['governorateName'],
-      nationalId: '', // أو حط القيمة لو كانت متاحة
-      firstName: '', // إن أردت
+      nationalId: '',
+      firstName: '',
       lastName: '',
       level: [],
     ));
@@ -101,7 +97,7 @@ class LoginCubit extends Cubit<LoginState> {
   Future<void> logout() async {
     try {
       await AuthApi.logout();
-      await LocalStorageHelper.clearAll(); // 🟢 استخدم الهيلبر
+      await LocalStorageHelper.clearAll();
       emit(LoginInitial());
     } catch (e) {
       throw Exception('Failed to logout');

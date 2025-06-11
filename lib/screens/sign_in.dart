@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
 import 'package:civiceye/animations/sign_in_animation.dart';
 import 'package:civiceye/core/themes/app_colors.dart';
 import 'package:civiceye/cubits/auth_cubit/auth_cubit.dart';
@@ -24,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _passwordController = TextEditingController();
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
-
+  
   bool _isKeyboardVisible = false;
   bool _isFieldFocused = false;
 
@@ -37,7 +37,6 @@ class _LoginScreenState extends State<LoginScreen>
     _startInitialAnimation();
   }
 
-  // تم نقل تهيئة الأنيميشن إلى SignInAnimationManager
 
   void _setupFocusListeners() {
     _emailFocusNode.addListener(() {
@@ -126,15 +125,15 @@ class _LoginScreenState extends State<LoginScreen>
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xFFF3E8FF), // بنفسجي فاتح جداً
-                    Color(0xFFE9D5FF), // بنفسجي فاتح
-                    Color(0xFFD8B4FE), // بنفسجي متوسط
-                    Color(0xFFA78BFA), // بنفسجي واضح
-                    Color(0xFF7C3AED), // بنفسجي غامق
-                    Color(0xFF6D28D9), // بنفسجي داكن
-                    Color(0xFF4F378B), // بنفسجي مزرق غامق
-                  ],
+                    colors: [
+                      Color(0xFFF3E8FF), // بنفسجي فاتح جداً
+                      Color(0xFFE9D5FF), // بنفسجي فاتح
+                      Color(0xFFD8B4FE), // بنفسجي متوسط
+                      Color(0xFFA78BFA), // بنفسجي واضح
+                      Color(0xFF7C3AED), // بنفسجي غامق
+                      Color(0xFF6D28D9), // بنفسجي داكن
+                      Color(0xFF4F378B), // بنفسجي مزرق غامق
+                    ],
                   ),
                 ),
                 height: MediaQuery.of(context).size.height,
@@ -195,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 // مساحة فارغة متحركة
                                 AnimatedContainer(
                                   duration: const Duration(milliseconds: 400),
-                                  height: _isKeyboardVisible ? 20 : 60,
+                                  height: _isKeyboardVisible ? 12 : 36,
                                   curve: Curves.easeInOutCubic,
                                 ),
                                 // الشعار مع انيميشن متقدم
@@ -229,7 +228,6 @@ class _LoginScreenState extends State<LoginScreen>
       ),
     ),
     );
-
   }
 
   Widget _buildAnimatedLogo() {
@@ -457,7 +455,7 @@ class _LoginScreenState extends State<LoginScreen>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: state is LoginLoading 
-                    ? [AppColors.primary, Color(0xFF8BA8F9)]
+                    ? [AppColors.primary, const Color(0xFF8BA8F9)]
                     : [AppColors.primary, AppColors.primary.withOpacity(0.8)],
               ),
               borderRadius: BorderRadius.circular(30),

@@ -14,25 +14,25 @@ class SignInAnimationManager {
 
   void init(TickerProvider vsync) {
     animationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 900),
       vsync: vsync,
     );
     slideController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1100),
       vsync: vsync,
     );
     fadeController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 850),
       vsync: vsync,
     );
     buttonController = AnimationController(
-      duration: const Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: 250),
       vsync: vsync,
     );
 
     logoSizeAnimation = Tween<double>(
-      begin: 1.18,
-      end: 0.95,
+      begin: 1.26,
+      end: 1.04,
     ).animate(CurvedAnimation(
       parent: animationController,
       curve: Curves.easeInOutCubic,
@@ -40,7 +40,7 @@ class SignInAnimationManager {
 
     formPositionAnimation = Tween<double>(
       begin: 0.0,
-      end: -35.0,
+      end: -25.0,
     ).animate(CurvedAnimation(
       parent: animationController,
       curve: Curves.easeInOutCubic,

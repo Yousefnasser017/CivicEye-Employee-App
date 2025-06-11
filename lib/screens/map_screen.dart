@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -46,10 +48,16 @@ class _MapScreenState extends State<MapScreen> {
                 enableScrollWheel: true,
                 flags: InteractiveFlag.all,
               ),
+              maxBounds: LatLngBounds(
+                const LatLng(22.0, 25.0),
+                const LatLng(31.7, 35.0),
+              ),
             ),
             children: [
               TileLayer(
-                urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                urlTemplate:
+                    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                subdomains: const ['a', 'b', 'c'],
                 userAgentPackageName: 'com.example.civiceye',
               ),
               MarkerLayer(

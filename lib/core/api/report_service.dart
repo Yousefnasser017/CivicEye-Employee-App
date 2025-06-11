@@ -15,7 +15,7 @@ class ReportApi {
       final response = await _dio.get(
         ApiConstants.reports(employee),
         options: Options(
-          extra: {'withCredentials': true}, // ✅ مهم جدًا
+          extra: {'withCredentials': true}, 
         ),
       );
 
@@ -38,7 +38,7 @@ class ReportApi {
   static Future<ReportModel> getReportDetails(int reportId) async {
     try {
       final response = await _dio.get(
-        ApiConstants.reportDetails(reportId), // تأكد إنها موجودة عندك
+        ApiConstants.reportDetails(reportId),
         options: Options(
           extra: {'withCredentials': true},
         ),
@@ -77,7 +77,7 @@ class ReportApi {
           'notes': notes ?? '',
         },
         options: Options(
-          extra: {'withCredentials': true}, // ✅
+          extra: {'withCredentials': true}, 
           headers: {
             'Content-Type': 'application/json',
           },

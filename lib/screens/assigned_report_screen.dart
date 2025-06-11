@@ -1,3 +1,4 @@
+import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
@@ -126,14 +127,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return ReportCard(
       report: report,
       colorScheme: colorScheme,
-      onTap: () {
+      onTap: () async {
+        // جلب id الموظف الحالي
+        final employee = await LocalStorageHelper.getEmployee();
+        final employeeId = employee?.id.toString() ?? '';
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => ReportDetailsScreen(
               report: report,
-              employeeId: report.employeeId,
-              reportId: report.id,
+              reportId: report.reportId,
+              employeeId: employeeId,
             ),
           ),
         );
