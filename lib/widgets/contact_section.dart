@@ -1,5 +1,9 @@
+// ignore_for_file: deprecated_member_use, dead_code
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
+import 'SnackbarHelper.dart';
 
 class CallConfirmationDialog extends StatefulWidget {
   final String phone;
@@ -25,7 +29,8 @@ class _CallConfirmationDialogState extends State<CallConfirmationDialog> {
     final cleanPhone = _cleanPhoneNumber(widget.phone);
 
     if (!_isValidPhoneNumber(widget.phone)) {
-      _showErrorSnackBar(context, "الرقم المدخل غير صالح: ${widget.phone}");
+      SnackBarHelper.show(context, "الرقم المدخل غير صالح: ${widget.phone}",
+          type: SnackBarType.error);
       return;
     }
 
@@ -35,28 +40,21 @@ class _CallConfirmationDialogState extends State<CallConfirmationDialog> {
       if (await canLaunchUrl(callUri)) {
         final bool launched = await launchUrl(
           callUri,
-          mode: LaunchMode.externalApplication,
+          mode: LaunchMode.platformDefault,
         );
         if (!launched) {
-          _showErrorSnackBar(context, "لا يمكن فتح تطبيق الاتصال");
+          SnackBarHelper.show(context,
+              "لا يمكن فتح تطبيق الاتصال. تأكد من وجود تطبيق اتصال افتراضي على جهازك أو أن الرقم صحيح ومدعوم.",
+              type: SnackBarType.error);
         }
       } else {
-        _showErrorSnackBar(context, "لا يمكن فتح تطبيق الاتصال");
+        SnackBarHelper.show(context, "لا يمكن فتح تطبيق الاتصال",
+            type: SnackBarType.error);
       }
     } catch (e) {
-      _showErrorSnackBar(context, "حدث خطأ أثناء محاولة الاتصال");
+      SnackBarHelper.show(context, "حدث خطأ أثناء محاولة الاتصال",
+          type: SnackBarType.error);
     }
-  }
-
-  void _showErrorSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
-      ),
-    );
   }
 
   @override
@@ -86,24 +84,87 @@ class _CallConfirmationDialogState extends State<CallConfirmationDialog> {
             style: TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: theme.dividerColor),
-            ),
-            child: Text(
-              widget.phone,
-              textDirection: TextDirection.ltr,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.primary,
-              ),
-            ),
+          StatefulBuilder(
+            builder: (context, setState) {
+              bool copied = false;
+              return Column(
+                children: [
+                  Stack(
+                    alignment: Alignment.centerRight,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceVariant,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: theme.dividerColor),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 3,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          widget.phone,
+                          textDirection: TextDirection.ltr,
+                          style: TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
+                            letterSpacing: 1.1,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 6,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          transitionBuilder: (child, anim) =>
+                              ScaleTransition(scale: anim, child: child),
+                          child: InkWell(
+                            key: ValueKey(copied),
+                            borderRadius: BorderRadius.circular(24),
+                            onTap: () async {
+                              await Clipboard.setData(
+                                  ClipboardData(text: widget.phone));
+                              SnackBarHelper.show(
+                                  context, "تم نسخ الرقم إلى الحافظة",
+                                  type: SnackBarType.success,
+                                  duration: Duration(seconds: 2));
+                              setState(() => copied = true);
+                              await Future.delayed(const Duration(seconds: 1));
+                              setState(() => copied = false);
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: copied
+                                    ? Colors.green.withOpacity(0.15)
+                                    : Colors.grey.withOpacity(0.08),
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(
+                                copied ? Icons.check : Icons.copy,
+                                color: copied
+                                    ? Colors.green
+                                    : theme.colorScheme.primary,
+                                size: 22,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              );
+            },
           ),
-          const SizedBox(height: 20),
         ],
       ),
       actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),

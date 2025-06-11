@@ -1,8 +1,7 @@
 
-import 'package:civiceye/core/themes/app_colors.dart';
 import 'package:flutter/material.dart';
 
-class CustomBottomNavBar extends StatelessWidget {
+class CustomBottomNavBar extends StatefulWidget {
   final int currentIndex;
   final void Function(int) onTap;
 
@@ -13,43 +12,125 @@ class CustomBottomNavBar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+  State<CustomBottomNavBar> createState() => _CustomBottomNavBarState();
+}
 
-    return BottomNavigationBar(
-      currentIndex: currentIndex,
-      onTap: onTap,
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: isDarkMode ? const Color(0xFF2C2C2C) : Colors.white,
-      selectedItemColor: AppColors.primary,
-      unselectedItemColor: isDarkMode ? Colors.grey[400] : Colors.grey[700],
-      selectedLabelStyle: const TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
+class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final bgColor = theme.bottomNavigationBarTheme.backgroundColor ??
+        (isDarkMode ? const Color(0xFF23272F) : Colors.white);
+    final selectedColor = theme.colorScheme.primary;
+    final unselectedColor =
+        theme.textTheme.bodySmall?.color?.withOpacity(0.7) ??
+            (isDarkMode ? Colors.grey[400]! : Colors.grey[700]!);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(18),
+          topRight: Radius.circular(18),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDarkMode ? Colors.black26 : Colors.grey.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
-      unselectedLabelStyle: const TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(
+                icon: Icons.home_outlined,
+                activeIcon: Icons.home,
+                label: 'الرئيسية',
+                index: 0,
+                selectedColor: selectedColor,
+                unselectedColor: unselectedColor,
+              ),
+              _buildNavItem(
+                icon: Icons.assignment_outlined,
+                activeIcon: Icons.assignment,
+                label: 'البلاغات',
+                index: 1,
+                selectedColor: selectedColor,
+                unselectedColor: unselectedColor,
+              ),
+              _buildNavItem(
+                icon: Icons.person_outline,
+                activeIcon: Icons.person,
+                label: 'الملف الشخصي',
+                index: 2,
+                selectedColor: selectedColor,
+                unselectedColor: unselectedColor,
+              ),
+            ],
+          ),
+        ),
       ),
-      iconSize: 24, // تثبيت حجم الأيقونات
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
-          label: 'الرئيسية',
+    );
+  }
+
+  Widget _buildNavItem({
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+    required int index,
+    required Color selectedColor,
+    required Color unselectedColor,
+  }) {
+    final bool isSelected = widget.currentIndex == index;
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => widget.onTap(index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? selectedColor.withOpacity(0.09)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 320),
+                transitionBuilder: (child, anim) =>
+                    ScaleTransition(scale: anim, child: child),
+                child: Icon(
+                  isSelected ? activeIcon : icon,
+                  key: ValueKey(isSelected ? activeIcon : icon),
+                  color: isSelected ? selectedColor : unselectedColor,
+                  size: isSelected ? 28 : 24,
+                ),
+              ),
+              const SizedBox(height: 2),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: TextStyle(
+                  color: isSelected ? selectedColor : unselectedColor,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  fontSize: 12,
+                ),
+                child: Text(label),
+              ),
+            ],
+          ),
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.assignment_outlined),
-          activeIcon: Icon(Icons.assignment),
-          label: 'البلاغات',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          activeIcon: Icon(Icons.person),
-          label: 'الملف الشخصي',
-        ),
-      ],
-      elevation: 10,
+      ),
     );
   }
 }

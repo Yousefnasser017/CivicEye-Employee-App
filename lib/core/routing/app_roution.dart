@@ -26,7 +26,7 @@ class AppRouter {
       case '/':
         return MaterialPageRoute(builder: (_) => const SplashScreen());
       case '/login':
-        return MaterialPageRoute(builder: (_) => LoginScreen());
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
       case '/home':
         return MaterialPageRoute(builder: (_) =>  const HomeScreen());
       case '/reports':
@@ -37,7 +37,7 @@ class AppRouter {
         builder: (_) => ReportDetailsScreen(
               report: report,
               reportId: report.reportId,
-              employeeId: employee!.id.toString(), // Convert int? to String?
+              employeeId: employee!.id.toString(), 
         ),
       );
       case '/map':

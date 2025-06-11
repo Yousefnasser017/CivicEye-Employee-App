@@ -10,10 +10,10 @@ class ExceptionHandler {
     _logger.e('حدث خطأ', error: error, stackTrace: StackTrace.current);
 
     if (error is ApiException) {
-      // return error.message;
+
     }
 
-    // معالجة أخطاء الشبكة والاتصال
+
     if (error is SocketException || error is IOException) {
       return 'تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.';
     }

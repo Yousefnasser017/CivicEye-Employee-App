@@ -1,3 +1,4 @@
+import 'package:civiceye/animations/home_screen_animation.dart';
 import 'package:civiceye/core/themes/app_colors.dart';
 import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
 import 'package:civiceye/cubits/report_cubit/report_state.dart';
@@ -6,7 +7,6 @@ import 'package:civiceye/screens/report_details.dart';
 import 'package:civiceye/widgets/custom_AppBar.dart';
 import 'package:civiceye/widgets/custom_Drawer.dart';
 import 'package:civiceye/widgets/custom_bottomNavBar.dart';
-import 'package:civiceye/widgets/loading_shimmer.dart';
 import 'package:civiceye/widgets/report_count.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

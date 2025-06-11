@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:civiceye/core/themes/app_colors.dart';
 
@@ -37,7 +38,6 @@ class StatsCard extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // Calculate responsive width with max constraints
     double cardWidth = screenWidth / 2 - 20;
     if (screenWidth > 600) {
       cardWidth = (screenWidth / 3 - 24).clamp(160.0, 200.0);
@@ -50,8 +50,8 @@ class StatsCard extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         width: cardWidth,
         constraints: const BoxConstraints(
-          minHeight: 120, // Minimum height to maintain consistency
-          maxHeight: 140, // Maximum height
+          minHeight: 120,
+          maxHeight: 140,
         ),
         decoration: BoxDecoration(
           color: isDarkMode ? Colors.white10 : Colors.white,
@@ -69,9 +69,8 @@ class StatsCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center, // Center vertically
-            crossAxisAlignment:
-                CrossAxisAlignment.center, // Center horizontally
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(_getStatusIcon(), size: 28, color: AppColors.primary),

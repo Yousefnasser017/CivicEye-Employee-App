@@ -1,17 +1,15 @@
-// report_status_card.dart
-
 import 'package:civiceye/models/report_status_enum.dart';
 import 'package:flutter/material.dart';
-import 'package:shimmer/shimmer.dart'; // ⭐️ استيراد مكتبة Shimmer
+import 'package:shimmer/shimmer.dart';
 
 class ReportStatusCard extends StatelessWidget {
   final ReportStatus status;
-  final bool isLoading; // ⭐️ إضافة متغير لتحديد ما إذا كان يتم التحميل
+  final bool isLoading;
 
   const ReportStatusCard({
     Key? key,
     required this.status,
-    this.isLoading = false, // ⭐️ قيمة افتراضية false
+    this.isLoading = false,
   }) : super(key: key);
 
   @override
@@ -21,7 +19,6 @@ class ReportStatusCard extends StatelessWidget {
     final statusText = status.label;
     final statusIcon = status.icon;
 
-    // ⭐️ الشرط: إذا كان isLoading صحيحًا، اعرض Shimmer
     if (isLoading) {
       return Shimmer.fromColors(
         baseColor: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
@@ -36,24 +33,23 @@ class ReportStatusCard extends StatelessWidget {
             contentPadding: const EdgeInsets.all(12),
             leading: CircleAvatar(
               radius: 20,
-              backgroundColor:
-                  Colors.white.withOpacity(0.5), // Placeholder for icon
+              backgroundColor: Colors.white.withOpacity(0.5),
             ),
             title: Align(
-              alignment: Alignment.centerRight, // محاذاة لليمين
+              alignment: Alignment.centerRight,
               child: Container(
                 width: MediaQuery.of(context).size.width * 0.4,
                 height: 16.0,
-                color: Colors.white.withOpacity(0.5), // Placeholder for text
+                color: Colors.white.withOpacity(0.5),
               ),
             ),
             subtitle: Align(
-              alignment: Alignment.centerRight, // محاذاة لليمين
+              alignment: Alignment.centerRight,
               child: Container(
                 width: MediaQuery.of(context).size.width * 0.6,
                 height: 16.0,
                 margin: const EdgeInsets.only(top: 4),
-                color: Colors.white.withOpacity(0.5), // Placeholder for text
+                color: Colors.white.withOpacity(0.5),
               ),
             ),
           ),
@@ -61,7 +57,6 @@ class ReportStatusCard extends StatelessWidget {
       );
     }
 
-    // الكود الأصلي الذي يعرض البطاقة العادية عندما لا يكون هناك تحميل
     return Card(
       elevation: 3,
       color: isDarkMode ? Colors.grey[800] : Colors.white,

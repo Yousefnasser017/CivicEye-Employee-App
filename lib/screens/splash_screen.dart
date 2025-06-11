@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:civiceye/animations/splash_animation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:civiceye/cubits/splash_cubit/splash_cubit.dart';
@@ -13,9 +14,7 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _positionAnimation;
+  late SplashAnimations splashAnimations;
   late Timer _dotTimer; // ✅ أضف هذا السطر
   double opacity = 0.0;
   int _dotCount = 0;
@@ -29,17 +28,7 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.9, end: 1.05).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
-
-    _positionAnimation = Tween<Offset>(
-            begin: const Offset(0, 1), end: const Offset(0, 0))
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    splashAnimations = SplashAnimations(_controller);
 
     _controller.forward().then((_) {
       Future.delayed(const Duration(seconds: 1), () {
@@ -67,7 +56,6 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -86,34 +74,38 @@ class _SplashScreenState extends State<SplashScreen>
         },
         child: Scaffold(
           backgroundColor: Theme.of(context).primaryColor,
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SlideTransition(
-                  position: _positionAnimation,
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: ScaleTransition(
-                      scale: _scaleAnimation,
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              // الخلفية المتحركة
+              AnimatedBackgroundParticles(controller: _controller),
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    splashAnimations.buildAnimatedLogoWithGlow(
                       child: Image.asset(
                         'assets/images/logo-white.png',
                         width: 180,
                       ),
+                      width: 180,
+                      glowColor: Colors.white,
                     ),
-                  ),
+                    const SizedBox(height: 32),
+                    BlocBuilder<SplashCubit, SplashState>(
+                      builder: (context, state) {
+                        if (state is SplashInitial) {
+                          return splashAnimations.buildAnimatedLoadingIndicator(
+                            color: Colors.white,
+                          );
+                        }
+                        return Container();
+                      },
+                    ),
+                  ],
                 ),
-              
-                BlocBuilder<SplashCubit, SplashState>(
-                  builder: (context, state) {
-                    if (state is SplashInitial) {
-                      return const CircularProgressIndicator();
-                    }
-                    return Container();  
-                  },
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

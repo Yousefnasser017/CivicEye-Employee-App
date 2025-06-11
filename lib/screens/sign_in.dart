@@ -1,4 +1,5 @@
 // ignore_for_file: use_build_context_synchronously
+import 'package:civiceye/animations/sign_in_animation.dart';
 import 'package:civiceye/core/themes/app_colors.dart';
 import 'package:civiceye/cubits/auth_cubit/auth_cubit.dart';
 import 'package:civiceye/cubits/auth_cubit/auth_state.dart';
@@ -17,105 +18,26 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with TickerProviderStateMixin {
+  late SignInAnimationManager _animationManager;
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
-  
-  late AnimationController _animationController;
-  late AnimationController _slideController;
-  late AnimationController _fadeController;
-  late AnimationController _buttonController;
-  
-  late Animation<double> _logoSizeAnimation;
-  late Animation<double> _formPositionAnimation;
-  late Animation<double> _slideAnimation;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _buttonScaleAnimation;
-  
+
   bool _isKeyboardVisible = false;
   bool _isFieldFocused = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeAnimations();
+    _animationManager = SignInAnimationManager();
+    _animationManager.init(this);
     _setupFocusListeners();
     _startInitialAnimation();
   }
 
-  void _initializeAnimations() {
-    // Controller للشعار والنموذج
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-    
-    // Controller للانزلاق من الأسفل
-    _slideController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    
-    // Controller للشفافية
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    
-    // Controller للزر
-    _buttonController = AnimationController(
-      duration: const Duration(milliseconds: 150),
-      vsync: this,
-    );
-    
-    // انيميشن حجم الشعار
-    _logoSizeAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.7,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOutCubic,
-    ));
-    
-    // انيميشن موضع النموذج
-    _formPositionAnimation = Tween<double>(
-      begin: 0.0,
-      end: -30.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOutCubic,
-    ));
-    
-    // انيميشن الانزلاق من الأسفل
-    _slideAnimation = Tween<double>(
-      begin: 100.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
-    
-    // انيميشن الشفافية
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    ));
-    
-    // انيميشن زر الدخول
-    _buttonScaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _buttonController,
-      curve: Curves.easeInOut,
-    ));
-    
-  }
+  // تم نقل تهيئة الأنيميشن إلى SignInAnimationManager
 
   void _setupFocusListeners() {
     _emailFocusNode.addListener(() {
@@ -135,22 +57,17 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _startInitialAnimation() {
     Future.delayed(const Duration(milliseconds: 100), () {
-      setState(() {
-      });
-      _fadeController.forward();
+      setState(() {});
+      _animationManager.fadeController.forward();
     });
-    
     Future.delayed(const Duration(milliseconds: 200), () {
-      _slideController.forward();
+      _animationManager.slideController.forward();
     });
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
-    _slideController.dispose();
-    _fadeController.dispose();
-    _buttonController.dispose();
+    _animationManager.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _emailFocusNode.dispose();
@@ -164,11 +81,11 @@ class _LoginScreenState extends State<LoginScreen>
     });
     
     if (_isFieldFocused) {
-      _animationController.forward();
+      _animationManager.animationController.forward();
     } else {
       Future.delayed(const Duration(milliseconds: 100), () {
         if (!_isFieldFocused) {
-          _animationController.reverse();
+          _animationManager.animationController.reverse();
         }
       });
     }
@@ -176,8 +93,8 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _onButtonPressed() {
     HapticFeedback.mediumImpact();
-    _buttonController.forward().then((_) {
-      _buttonController.reverse();
+    _animationManager.buttonController.forward().then((_) {
+      _animationManager.buttonController.reverse();
     });
   }
 
@@ -201,104 +118,127 @@ class _LoginScreenState extends State<LoginScreen>
       child: Theme(
         data: ThemeData.light(),
         child: Scaffold(
-          backgroundColor: Colors.white,
-          resizeToAvoidBottomInset: true,
-          body: BlocConsumer<LoginCubit, LoginState>(
-            listener: (context, state) {
-              if (state is LoginFailure) {
-                HapticFeedback.heavyImpact();
-                SnackBarHelper.show(context, state.message,
-                    type: SnackBarType.error);
-              }
-              if (state is LoginSuccess) {
-                HapticFeedback.lightImpact();
-                Future.microtask(() async {
-                  context.read<ReportsCubit>().clear();
-                  SnackBarHelper.show(context, "تم تسجيل الدخول بنجاح",
-                      type: SnackBarType.success);
-                  Navigator.pushReplacementNamed(context, '/home');
-                });
-              }
-            },
-            builder: (context, state) {
-              final cubit = context.read<LoginCubit>();
-              return Directionality(
-                textDirection: TextDirection.rtl,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.white,
-                        AppColors.primary.withOpacity(0.05),
-                      ],
-                    ),
-                  ),
-                  child: AnimatedBuilder(
-                    animation: Listenable.merge([
-                      _animationController,
-                      _slideController,
-                      _fadeController,
-                    ]),
-                    builder: (context, child) {
-                      return SingleChildScrollView(
-                        physics: const ClampingScrollPhysics(),
-                        child: Container(
-                          height: MediaQuery.of(context).size.height,
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // مساحة فارغة متحركة
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 400),
-                                height: _isKeyboardVisible ? 20 : 60,
-                                curve: Curves.easeInOutCubic,
-                              ),
-                              
-                              // الشعار مع انيميشن متقدم
-                              _buildAnimatedLogo(),
-                              
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 400),
-                                height: _isKeyboardVisible ? 5 : 15,
-                                curve: Curves.easeInOutCubic,
-                              ),
-                              
-                              // النص الترحيبي مع انيميشن
-                              _buildWelcomeText(),
-                              
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 400),
-                                height: _isKeyboardVisible ? 20 : 40,
-                                curve: Curves.easeInOutCubic,
-                              ),
-                              
-                              // النموذج مع الانيميشن
-                              _buildAnimatedForm(cubit, state),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
+          backgroundColor: Colors.transparent,
+            resizeToAvoidBottomInset: true,
+            body: SafeArea(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFF3E8FF), // بنفسجي فاتح جداً
+                    Color(0xFFE9D5FF), // بنفسجي فاتح
+                    Color(0xFFD8B4FE), // بنفسجي متوسط
+                    Color(0xFFA78BFA), // بنفسجي واضح
+                    Color(0xFF7C3AED), // بنفسجي غامق
+                    Color(0xFF6D28D9), // بنفسجي داكن
+                    Color(0xFF4F378B), // بنفسجي مزرق غامق
+                  ],
                   ),
                 ),
-              );
-            },
+                height: MediaQuery.of(context).size.height,
+                width: double.infinity,
+                child: BlocConsumer<LoginCubit, LoginState>(
+                  listener: (context, state) {
+                if (state is LoginFailure) {
+                  HapticFeedback.heavyImpact();
+                  SnackBarHelper.show(context, state.message,
+                      type: SnackBarType.error);
+                }
+                if (state is LoginSuccess) {
+                  HapticFeedback.lightImpact();
+                  FocusScope.of(context).unfocus();
+                  Future.microtask(() async {
+                    context.read<ReportsCubit>().clear();
+                    SnackBarHelper.show(context, "تم تسجيل الدخول بنجاح",
+                        type: SnackBarType.success);
+                    Navigator.pushReplacementNamed(context, '/home');
+                  });
+                }
+              },
+              builder: (context, state) {
+                final cubit = context.read<LoginCubit>();
+                return Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFFF8FAFC),
+                          Color(0xFFE8EDFF),
+                          Color(0xFFD6E1FF),
+                          Color(0xFFB5C7F9),
+                          Color(0xFF8BA8F9),
+                          Color(0xFF6B8AE6),
+                          Color(0xFF4C6FE0),
+                        ],
+                      ),
+                    ),
+                    child: AnimatedBuilder(
+                      animation: Listenable.merge([
+                        _animationManager.animationController,
+                        _animationManager.slideController,
+                        _animationManager.fadeController,
+                      ]),
+                      builder: (context, child) {
+                        return SingleChildScrollView(
+                          physics: const ClampingScrollPhysics(),
+                          child: Container(
+                            height: MediaQuery.of(context).size.height,
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              mainAxisAlignment: _isKeyboardVisible ? MainAxisAlignment.start : MainAxisAlignment.center,
+                              children: [
+                                // مساحة فارغة متحركة
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 400),
+                                  height: _isKeyboardVisible ? 20 : 60,
+                                  curve: Curves.easeInOutCubic,
+                                ),
+                                // الشعار مع انيميشن متقدم
+                                _buildAnimatedLogo(),
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 400),
+                                  height: _isKeyboardVisible ? 5 : 15,
+                                  curve: Curves.easeInOutCubic,
+                                ),
+                                // النص الترحيبي مع انيميشن
+                                _buildWelcomeText(),
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 400),
+                                  height: _isKeyboardVisible ? 20 : 40,
+                                  curve: Curves.easeInOutCubic,
+                                ),
+                                // النموذج مع الانيميشن
+                                _buildAnimatedForm(cubit, state),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
+    ),
     );
+
   }
 
   Widget _buildAnimatedLogo() {
     return FadeTransition(
-      opacity: _fadeAnimation,
+      opacity: _animationManager.fadeAnimation,
       child: Transform.translate(
-        offset: Offset(0, -_slideAnimation.value),
+        offset: Offset(0, -_animationManager.slideAnimation.value),
         child: Transform.scale(
-          scale: _logoSizeAnimation.value,
+          scale: _animationManager.logoSizeAnimation.value,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 400),
             height: _isKeyboardVisible ? 70 : 100,
@@ -326,9 +266,9 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildWelcomeText() {
     return FadeTransition(
-      opacity: _fadeAnimation,
+      opacity: _animationManager.fadeAnimation,
       child: Transform.translate(
-        offset: Offset(0, -_slideAnimation.value + 20),
+        offset: Offset(0, -_animationManager.slideAnimation.value + 20),
         child: AnimatedOpacity(
           opacity: _isKeyboardVisible ? 0.6 : 1.0,
           duration: const Duration(milliseconds: 400),
@@ -337,14 +277,16 @@ class _LoginScreenState extends State<LoginScreen>
             shaderCallback: (bounds) => LinearGradient(
               colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
             ).createShader(bounds),
-            child: const Text(
-              "مرحبا بك",
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOutCubic,
               style: TextStyle(
-                fontSize: 28,
+                fontSize: _isKeyboardVisible ? 20 : 28,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
                 fontFamily: 'Tajawal',
               ),
+              child: const Text("مرحبا بك"),
             ),
           ),
         ),
@@ -354,9 +296,9 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildAnimatedForm(LoginCubit cubit, LoginState state) {
     return FadeTransition(
-      opacity: _fadeAnimation,
+      opacity: _animationManager.fadeAnimation,
       child: Transform.translate(
-        offset: Offset(0, _formPositionAnimation.value - _slideAnimation.value + 40),
+        offset: Offset(0, _animationManager.formPositionAnimation.value - _animationManager.slideAnimation.value + 40),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.9),
@@ -505,17 +447,17 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildAnimatedLoginButton(
       BuildContext context, LoginCubit cubit, LoginState state) {
     return AnimatedBuilder(
-      animation: _buttonController,
+      animation: _animationManager.buttonController,
       builder: (context, child) {
         return Transform.scale(
-          scale: _buttonScaleAnimation.value,
+          scale: _animationManager.buttonScaleAnimation.value,
           child: Container(
             width: double.infinity,
             height: 60,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: state is LoginLoading 
-                    ? [Colors.grey, Colors.grey[600]!]
+                    ? [AppColors.primary, Color(0xFF8BA8F9)]
                     : [AppColors.primary, AppColors.primary.withOpacity(0.8)],
               ),
               borderRadius: BorderRadius.circular(30),

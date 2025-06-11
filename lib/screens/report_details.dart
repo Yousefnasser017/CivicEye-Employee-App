@@ -1,9 +1,9 @@
+import 'package:civiceye/animations/report_details_animation.dart';
 import 'package:civiceye/core/config/websocket.dart';
 import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
 import 'package:civiceye/cubits/report_cubit/report_state.dart';
 import 'package:civiceye/widgets/SnackbarHelper.dart';
 import 'package:civiceye/widgets/info_card.dart';
-import 'package:civiceye/widgets/loading_shimmer.dart';
 import 'package:civiceye/widgets/report_status_card.dart';
 import 'package:flutter/material.dart';
 import 'package:civiceye/cubits/report_cubit/report_detail_cubit.dart';

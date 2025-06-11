@@ -12,8 +12,6 @@ class LocalStorageHelper {
     _storage = newStorage;
   }
 
-
-  /// Save full employee model
   static Future<void> saveEmployee(EmployeeModel employee) async {
     await Future.wait([
       _storage.write(key: 'employeeId', value: employee.id.toString()),
@@ -26,7 +24,7 @@ class LocalStorageHelper {
     ]);
   }
 
-  /// Get full employee model
+
   static Future<EmployeeModel?> getEmployee() async {
     final id = await _storage.read(key: 'employeeId');
     if (id == null) return null;

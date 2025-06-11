@@ -1,3 +1,4 @@
+// ignore_for_file: unused_local_variable, deprecated_member_use
 import 'package:civiceye/core/themes/app_colors.dart';
 import 'package:civiceye/widgets/SnackbarHelper.dart';
 import 'package:flutter/material.dart';
@@ -270,12 +271,7 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
                                       selectedStatus == currentStatus)
                                   ? null
                                   : () {
-                                      cubit.updateReportStatus(
-                                        widget.report,
-                                        selectedStatus.name,
-                                        notesController.text.trim(),
-                                        widget.employeeId,
-                                      );
+                                      Navigator.of(context).pop(selectedStatus);
                                     },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: isStatusUpdating
