@@ -63,19 +63,7 @@ class ReportsCubit extends Cubit<ReportsState> {
       _hasMore = true;
       _allReports = await ReportApi.getReportsByEmployee(_employeeId!);
 
-      final inProgressReports =
-          _allReports.where((r) => r.currentStatus == 'In_Progress').toList();
-      if (inProgressReports.length > 1) {
-        for (int i = 1; i < inProgressReports.length; i++) {
-          _allReports = _allReports.map((report) {
-            if (report.reportId == inProgressReports[i].reportId) {
-              return report.copyWith(currentStatus: 'On_Hold');
-            }
-            return report;
-          }).toList();
-        }
-      }
-
+      
       final filtered = _applyFilter(_allReports);
 
       final inProgressReport = _allReports.firstWhere(
@@ -156,15 +144,7 @@ class ReportsCubit extends Cubit<ReportsState> {
     final currentState = state;
     if (currentState is! ReportsLoaded) return null;
 
-    if (newStatus == 'In_Progress') {
-      final hasOtherInProgress = _allReports.any(
-          (r) => r.currentStatus == 'In_Progress' && r.reportId != reportId);
-      if (hasOtherInProgress) {
-        emit(ReportsError(
-            message: 'لا يمكن وجود أكثر من بلاغ في حالة قيد التنفيذ'));
-        return null;
-      }
-    }
+    
 
     try {
       emit(ReportsLoading(report: currentState.report));
@@ -206,18 +186,7 @@ class ReportsCubit extends Cubit<ReportsState> {
   }
 
   void updateLocalReport(ReportModel updatedReport) {
-    if (updatedReport.currentStatus == 'In_Progress') {
-      final hasOtherInProgress = _allReports.any(
-        (r) =>
-            r.currentStatus == 'In_Progress' &&
-            r.reportId != updatedReport.reportId,
-      );
-      if (hasOtherInProgress) {
-        emit(ReportsError(
-            message: 'لا يمكن وجود أكثر من بلاغ في حالة قيد التنفيذ'));
-        return;
-      }
-    }
+   
 
     final index =
         _allReports.indexWhere((r) => r.reportId == updatedReport.reportId);

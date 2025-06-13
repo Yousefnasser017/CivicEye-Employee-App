@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable
+
 import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -68,7 +70,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
           if (index == 2) Navigator.pushReplacementNamed(context, '/profile');
         },
       ),
-      body: Column(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
+          return Column(
         children: [
           _buildStatusFilterBar(cubit, colorScheme),
           Expanded(
@@ -111,6 +117,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
             ),
           ),
         ],
+          );
+        },  
       ),
     );
   }
@@ -146,8 +154,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Widget _buildShimmerList() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding = screenWidth * 0.03;
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 8),
       itemCount: 6,
       itemBuilder: (context, index) => const Padding(
         padding: EdgeInsets.symmetric(vertical: 8),

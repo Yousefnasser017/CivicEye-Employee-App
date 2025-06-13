@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -10,65 +12,80 @@ class HomeScreenShimmer extends StatelessWidget {
     final baseColor = isDarkMode ? Colors.grey[700]! : Colors.grey[300]!;
     final highlightColor = isDarkMode ? Colors.grey[500]! : Colors.grey[100]!;
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.04, vertical: screenHeight * 0.01),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
+                SizedBox(height: screenHeight * 0.02),
                 _buildTitleShimmer(
-                    width: 150,
+                    width: screenWidth * 0.38,
                     baseColor: baseColor,
                     highlightColor: highlightColor),
-                const SizedBox(height: 12),
+                SizedBox(height: screenHeight * 0.015),
                 _buildDividerShimmer(
                     baseColor: baseColor, highlightColor: highlightColor),
-                const SizedBox(height: 12),
+                SizedBox(height: screenHeight * 0.015),
                 _buildCardShimmer(
-                    height: 80,
+                    height: screenHeight * 0.09,
                     baseColor: baseColor,
                     highlightColor: highlightColor),
               ],
             ),
           ),
         ),
+
+        // Shimmer لإحصائيات البلاغات
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.04, vertical: screenHeight * 0.01),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // عنوان "إحصائيات البلاغات"
                 _buildTitleShimmer(
-                    width: 120,
+                    width: screenWidth * 0.3,
                     baseColor: baseColor,
                     highlightColor: highlightColor),
-                const SizedBox(height: 12),
+                SizedBox(height: screenHeight * 0.015),
+                // الخط الفاصل
                 _buildDividerShimmer(
                     baseColor: baseColor, highlightColor: highlightColor),
-                const SizedBox(height: 12),
+                SizedBox(height: screenHeight * 0.015),
+                // شبكة الإحصائيات
                 _buildStatsGridShimmer(
                     baseColor: baseColor, highlightColor: highlightColor),
               ],
             ),
           ),
         ),
+
+        // Shimmer لأحدث البلاغات
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.04, vertical: screenHeight * 0.01),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // عنوان "أحدث البلاغات"
                 _buildTitleShimmer(
-                    width: 100,
+                    width: screenWidth * 0.22,
                     baseColor: baseColor,
                     highlightColor: highlightColor),
-                const SizedBox(height: 12),
+                SizedBox(height: screenHeight * 0.015),
+                // الخط الفاصل
                 _buildDividerShimmer(
                     baseColor: baseColor, highlightColor: highlightColor),
-                const SizedBox(height: 12),
+                SizedBox(height: screenHeight * 0.015),
+                // قائمة البلاغات
                 _buildReportsListShimmer(
                     baseColor: baseColor, highlightColor: highlightColor),
               ],
@@ -84,11 +101,13 @@ class HomeScreenShimmer extends StatelessWidget {
     required Color baseColor,
     required Color highlightColor,
   }) {
+    final screenHeight = WidgetsBinding.instance.window.physicalSize.height /
+        WidgetsBinding.instance.window.devicePixelRatio;
     return Shimmer.fromColors(
       baseColor: baseColor,
       highlightColor: highlightColor,
       child: Container(
-        height: 24,
+        height: screenHeight * 0.028,
         width: width,
         decoration: BoxDecoration(
           color: baseColor,
@@ -118,12 +137,14 @@ class HomeScreenShimmer extends StatelessWidget {
     required Color baseColor,
     required Color highlightColor,
   }) {
+    final screenWidth = WidgetsBinding.instance.window.physicalSize.width /
+        WidgetsBinding.instance.window.devicePixelRatio;
     return Shimmer.fromColors(
       baseColor: baseColor,
       highlightColor: highlightColor,
       child: Container(
         height: height,
-        width: double.infinity,
+        width: screenWidth * 0.92,
         decoration: BoxDecoration(
           color: baseColor,
           borderRadius: BorderRadius.circular(12),
@@ -177,3 +198,4 @@ class HomeScreenShimmer extends StatelessWidget {
     );
   }
 }
+

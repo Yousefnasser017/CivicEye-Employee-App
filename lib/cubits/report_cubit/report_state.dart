@@ -17,7 +17,6 @@ class ReportsLoading extends ReportsState {
 class ReportsLoaded extends ReportsState {
   final List<ReportModel> report;
   final bool hasMore;
-
   final ReportModel? inProgressReport;
   final List<ReportModel> latestReports;
   final Map<String, int> reportCountsByStatus;

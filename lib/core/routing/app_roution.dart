@@ -6,6 +6,7 @@ import 'package:civiceye/screens/assigned_report_screen.dart';
 
 import 'package:civiceye/screens/home_screen.dart';
 import 'package:civiceye/screens/map_screen.dart';
+import 'package:civiceye/screens/notifications_screen.dart';
 
 import 'package:civiceye/screens/profile_screen.dart';
 import 'package:civiceye/screens/report_details.dart';
@@ -35,6 +36,8 @@ class AppRouter {
               employeeId: employee!.id.toString(), 
         ),
       );
+      case '/notifications':
+        return MaterialPageRoute(builder: (_) => const NotificationsScreen());
       case '/map':
         return MaterialPageRoute(builder: (_) => MapScreen(
           latitude: (settings.arguments as Map<String, dynamic>?)?['latitude'],

@@ -1,7 +1,11 @@
+// ignore_for_file: unrelated_type_equality_checks
+
 import 'package:civiceye/core/api/report_service.dart';
 import 'package:civiceye/core/config/websocket.dart';
+import 'package:civiceye/cubits/home_cubit/home_state.dart';
 import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
 import 'package:civiceye/cubits/report_cubit/report_detail_state.dart';
+import 'package:civiceye/cubits/report_cubit/report_state.dart';
 import 'package:civiceye/models/report_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -31,6 +35,22 @@ class ReportDetailCubit extends Cubit<ReportDetailState> {
     String? notes,
     int employeeId,
   ) async {
+        if (isClosed) return null;
+
+    // تحقق مركزي قبل أي تحديث
+    if (newStatus == ReportStatus.In_Progress) {
+      final hasOtherInProgress = reportsCubit.state is ReportsLoaded &&
+          (reportsCubit.state as ReportsLoaded).report.any(
+                (r) =>
+                    r.currentStatus == ReportStatus.In_Progress.name &&
+                    r.reportId != report.reportId,
+              );
+      if (hasOtherInProgress) {
+        emit(const ReportDetailError(
+            message: 'لايمكن تحديث الحالة يوجد بلاغ جاري حاليا'));
+        return null;
+      }
+    }
     if (isClosed) return null;
     emit(state.copyWith(isStatusUpdating: true, error: null));
     try {

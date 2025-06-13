@@ -148,8 +148,9 @@ class _LoginScreenState extends State<LoginScreen>
                 if (state is LoginSuccess) {
                   HapticFeedback.lightImpact();
                   FocusScope.of(context).unfocus();
-                  Future.microtask(() async {
-                    context.read<ReportsCubit>().clear();
+                 Future.delayed(Duration.zero, () {
+                        if (!mounted) return;
+                        context.read<ReportsCubit>().clear();  
                     SnackBarHelper.show(context, "تم تسجيل الدخول بنجاح",
                         type: SnackBarType.success);
                     Navigator.pushReplacementNamed(context, '/home');

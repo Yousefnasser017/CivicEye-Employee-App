@@ -2,7 +2,11 @@ import 'package:equatable/equatable.dart';
 import 'package:civiceye/models/report_model.dart';
 
 // تعريف الحالات المتاحة في الـ Cubit
-enum ReportStatus { initial, loading, success, failure, submitted, inProgress, onHold, resolved, closed }
+enum ReportStatus { initial, loading, success, failure,   Submitted,
+  In_Progress,
+  On_Hold,
+  Resolved,
+  Cancelled }
 
 class ReportState extends Equatable {
   final ReportStatus status;

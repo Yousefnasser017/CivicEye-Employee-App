@@ -1,27 +1,55 @@
 // ignore_for_file: avoid_print
 
 import 'dart:convert';
+import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+
+import 'dart:async';
 
 class StompWebSocketService {
   static final StompWebSocketService _instance =
       StompWebSocketService._internal();
+
   factory StompWebSocketService() => _instance;
+
   StompWebSocketService._internal();
 
   late StompClient _client;
   bool _connected = false;
+  int _reconnectAttempts = 0;
 
   bool get isConnected => _connected;
 
-  void connect() async {
-    const storage = FlutterSecureStorage();
-    final jwtToken = await storage.read(key: 'jwt');
+  // StreamController لبث البلاغات الجديدة
+  final StreamController<String> _reportController =
+      StreamController<String>.broadcast();
+  Stream<String> get reportStream => _reportController.stream;
+
+  Future<void> connect() async {
+    final jwtToken = await LocalStorageHelper.getJwtToken();
     if (jwtToken == null) {
-      print('JWT token not found!');
+      print(' JWT token not found in LocalStorageHelper!');
+      return;
+    } else {
+      print('✅ JWT token retrieved: $jwtToken');
+    }
+
+    if (_connected) {
+      print(' Already connected');
       return;
     }
+
+    // في حال وجود اتصال قديم نغلقه
+    try {
+      if (_client.connected) {
+        print('🔌 Deactivating previous client...');
+        _client.deactivate();
+      }
+    } catch (_) {
+      // قد يكون لم يُنشأ بعد
+    }
+
     _client = StompClient(
       config: StompConfig.sockJS(
         url: 'http://192.168.1.2:9090/ws',
@@ -37,12 +65,9 @@ class StompWebSocketService {
           _tryReconnect();
         },
         stompConnectHeaders: {'login': 'guest', 'passcode': 'guest'},
-        webSocketConnectHeaders: {
-          'Cookie': 'jwt=$jwtToken',
-        },
+        webSocketConnectHeaders: {'Cookie': 'jwt=$jwtToken'},
         heartbeatOutgoing: const Duration(seconds: 5),
-        heartbeatIncoming:
-            const Duration(seconds: 5), 
+        heartbeatIncoming: const Duration(seconds: 5),
       ),
     );
 
@@ -51,17 +76,35 @@ class StompWebSocketService {
 
   void _onConnectCallback(StompFrame frame) {
     _connected = true;
-    print('STOMP connected');
+    print('✅ STOMP connected');
+
+    // الاشتراك في قناة استقبال البلاغات
+    _client.subscribe(
+      destination: 'user/queue/reports/', // عدّل المسار حسب السيرفر
+      callback: (StompFrame reportFrame) {
+        if (reportFrame.body != null) {
+          _reportController.add(reportFrame.body!);
+          print(' Received new report: ${reportFrame.body}');
+        }
+      },
+    );
   }
 
   void _tryReconnect() {
-    if (!_connected) {
-      Future.delayed(const Duration(seconds: 5), () {
+    if (!_connected && _reconnectAttempts < 5) {
+      _reconnectAttempts++;
+      final delay = Duration(seconds: 5 * _reconnectAttempts);
+
+      print(
+          ' Attempting reconnect #$_reconnectAttempts in ${delay.inSeconds}s...');
+
+      Future.delayed(delay, () {
         if (!_connected) {
-          print(' Trying to reconnect to WebSocket...');
           connect();
         }
       });
+    } else if (_reconnectAttempts >= 5) {
+      print(' Max reconnect attempts reached. Giving up.');
     }
   }
 
@@ -72,7 +115,7 @@ class StompWebSocketService {
     required int employeeId,
   }) {
     if (!_connected) {
-      print('WebSocket not connected. Skipping send.');
+      print(' WebSocket not connected. Skipping send.');
       return;
     }
 
@@ -95,5 +138,7 @@ class StompWebSocketService {
   void dispose() {
     _client.deactivate();
     _connected = false;
+    _reportController.close();
+    print('WebSocket connection disposed');
   }
 }

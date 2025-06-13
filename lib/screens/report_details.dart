@@ -118,9 +118,11 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
               orElse: () => ReportStatus.Submitted,
             );
             final timeString = formatTime(displayReport.createdAt);
-
+            final screenWidth = MediaQuery.of(context).size.width;
+            final screenHeight = MediaQuery.of(context).size.height;
+            final paddingValue = screenWidth * 0.05;
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(paddingValue),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -207,8 +209,9 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF725DFE),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 40, vertical: 20),
+                           padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.1,
+                              vertical: screenHeight * 0.025),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),

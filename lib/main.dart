@@ -30,7 +30,7 @@ void main() async {
 ApiConfig.init();
   final webSocketService = StompWebSocketService();
   webSocketService.connect();
-  runApp( MyApp());
+  runApp( const MyApp());
 }
 
 extension on FlutterSecureStorage {
