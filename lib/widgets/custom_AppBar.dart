@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 
+import 'package:civiceye/core/services/notification_counter.dart';
+
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
 
@@ -38,7 +40,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           centerTitle: false,
           title: Image.asset(
             'assets/images/logo-white.png',
-            height: 50,
+            height: 55,
             fit: BoxFit.contain,
             color: Colors.white,
           ),
@@ -54,22 +56,58 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   onTap: () {
                     Navigator.pushNamed(context, '/notifications');
                   },
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.85),
-                      shape: BoxShape.circle,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 6,
-                          offset: Offset(0, 2),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.85),
+                          shape: BoxShape.circle,
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: const Icon(Icons.notifications,
-                        color: Color(0xFF725DFE)),
+                        child: const Icon(Icons.notifications,
+                            color: Color(0xFF725DFE)),
+                      ),
+                      // Badge
+                      Positioned(
+                        right: 6,
+                        top: 6,
+                        child: ValueListenableBuilder<int>(
+                          valueListenable: NotificationCounter.notifier,
+                          builder: (context, value, _) {
+                            if (value == 0) return const SizedBox.shrink();
+                            return Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 18,
+                                minHeight: 18,
+                              ),
+                              child: Text(
+                                value > 99 ? '99+' : value.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

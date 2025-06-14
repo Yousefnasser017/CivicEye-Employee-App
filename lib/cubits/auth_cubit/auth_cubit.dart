@@ -47,9 +47,10 @@ class LoginCubit extends Cubit<LoginState> {
       if (loginResponse.type != 'Employee') {
         throw ApiException('ليس لديك صلاحية الوصول.', 403);
       }
-      webSocketService.connect();
+     
 
       await _saveUserData(loginResponse);
+       webSocketService.connect();
       final userDataResponse = await AuthApi.getUserData();
       final data = userDataResponse.data;
       

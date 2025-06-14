@@ -360,7 +360,8 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
 
     switch (currentStatus) {
       case ReportStatus.Submitted:
-        available.add(ReportStatus.In_Progress);
+        available.addAll([ ReportStatus.In_Progress,
+          ReportStatus.Cancelled,]);
         break;
       case ReportStatus.In_Progress:
         available.addAll([

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, unnecessary_null_comparison
+
 import 'package:civiceye/animations/report_details_animation.dart';
 import 'package:civiceye/core/config/websocket.dart';
 import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
@@ -6,6 +8,7 @@ import 'package:civiceye/widgets/SnackbarHelper.dart';
 import 'package:civiceye/widgets/info_card.dart';
 import 'package:civiceye/widgets/report_status_card.dart';
 import 'package:flutter/material.dart';
+import '../core/themes/app_colors.dart';
 import 'package:civiceye/cubits/report_cubit/report_detail_cubit.dart';
 import 'package:civiceye/cubits/report_cubit/report_detail_state.dart';
 import 'package:civiceye/models/report_model.dart';
@@ -16,13 +19,13 @@ import 'package:civiceye/widgets/show_update_status_dialog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ReportDetailsScreen extends StatefulWidget {
-  final ReportModel report;
+  final ReportModel? report;
   final String employeeId;
   final int reportId;
 
   const ReportDetailsScreen({
     Key? key,
-    required this.report,
+    this.report,
     required this.employeeId,
     required this.reportId,
   }) : super(key: key);
@@ -40,15 +43,18 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    _currentReport = widget.report;
-
     reportsCubit = context.read<ReportsCubit>();
     reportDetailCubit = ReportDetailCubit(
       reportsCubit: reportsCubit,
       socketService: StompWebSocketService(),
     );
-
-    reportDetailCubit.fetchReportDetails(widget.reportId);
+    if (widget.report != null) {
+      _currentReport = widget.report!;
+      // إذا كان report موجود لا داعي لجلب التفاصيل
+    } else {
+      // إذا لم يوجد report، جلب التفاصيل باستخدام reportId
+      reportDetailCubit.fetchReportDetails(widget.reportId);
+    }
   }
 
   @override
@@ -64,20 +70,72 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
     return BlocProvider.value(
       value: reportDetailCubit,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            "تفاصيل البلاغ",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-          backgroundColor: const Color(0xFF725DFE),
-          automaticallyImplyLeading: false,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.arrow_forward),
-              onPressed: () => Navigator.pop(context),
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.92),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.07),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(22)),
             ),
-          ],
+            child: SafeArea(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned(
+                    left: 16,
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).maybePop(),
+                      child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: AppColors.primary,
+                            size: 24,
+                            textDirection: TextDirection.ltr,
+                          )),
+                    ),
+                  ),
+                  const Center(
+                    child: Text(
+                      'تفاصيل البلاغ',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 23,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black26,
+                            offset: Offset(0, 2),
+                            blurRadius: 6,
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
         body: BlocConsumer<ReportDetailCubit, ReportDetailState>(
           listener: (context, state) {
@@ -113,10 +171,14 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
 
             final displayReport = _currentReport;
 
-            final status = ReportStatus.values.firstWhere(
-              (e) => e.name == displayReport.currentStatus,
-              orElse: () => ReportStatus.Submitted,
-            );
+          ReportStatus? status;
+            try {
+              status = ReportStatus.values.firstWhere(
+                (e) => e.name == displayReport.currentStatus,
+              );
+            } catch (_) {
+              status = null;
+            }
             final timeString = formatTime(displayReport.createdAt);
             final screenWidth = MediaQuery.of(context).size.width;
             final screenHeight = MediaQuery.of(context).size.height;
@@ -174,9 +236,19 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                       }
                     },
                   ),
-                  ReportStatusCard(
-                    status: status,
-                    isLoading: _isUpdatingStatus,
+                   status != null
+                      ? ReportStatusCard(
+                          status: status,
+                          isLoading: _isUpdatingStatus,
+                        )
+                      : const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          child: Text(
+                            'حالة البلاغ غير معروفة',
+                            style: TextStyle(
+                                color: Colors.red, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
                   ),
                   const SizedBox(height: 20),
                   if (status != ReportStatus.Resolved &&
@@ -186,8 +258,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                         onPressed: () async {
                           final currentReportsState =
                               context.read<ReportsCubit>().state;
-                          if (currentReportsState is ReportsLoaded) {
-                          }
+                          if (currentReportsState is ReportsLoaded) {}
 
                           final newStatus = await UpdateStatusDialog.show(
                             context: context,
@@ -209,7 +280,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF725DFE),
-                           padding: EdgeInsets.symmetric(
+                          padding: EdgeInsets.symmetric(
                               horizontal: screenWidth * 0.1,
                               vertical: screenHeight * 0.025),
                           shape: RoundedRectangleBorder(

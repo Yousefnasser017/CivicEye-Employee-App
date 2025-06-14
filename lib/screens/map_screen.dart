@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:civiceye/core/themes/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -28,6 +29,7 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     final reportLocation = LatLng(widget.latitude!, widget.longitude!);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -79,9 +81,9 @@ class _MapScreenState extends State<MapScreen> {
             child: FloatingActionButton(
               heroTag: "backButton",
               mini: true,
-              backgroundColor: Colors.white,
+              backgroundColor: AppColors.primary,
               onPressed: () => Navigator.pop(context),
-              child: const Icon(Icons.arrow_forward, color: Colors.black),
+              child:  Icon(Icons.arrow_forward, color:isDarkMode?Colors.white:Colors.black),
             ),
           ),
         ],

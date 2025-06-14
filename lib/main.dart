@@ -1,8 +1,13 @@
 // ignore_for_file: depend_on_referenced_packages, library_private_types_in_public_api
 
+import 'dart:async';
+
 import 'package:civiceye/core/config/app_config.dart';
 import 'package:civiceye/core/config/websocket.dart';
 import 'package:civiceye/core/routing/app_roution.dart';
+import 'package:civiceye/core/services/foreground_service.dart';
+import 'package:civiceye/core/services/notification_helper.dart';
+import 'package:civiceye/core/services/report_notification_handler.dart';
 import 'package:civiceye/core/themes/app_theme.dart';
 import 'package:civiceye/cubits/home_cubit/home_cubit.dart';
 import 'package:civiceye/cubits/report_cubit/report_detail_cubit.dart';
@@ -12,12 +17,17 @@ import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationHelper.init();
+  // إشعار تجريبي للتأكد من عمل الإشعارات
+  await NotificationHelper.initEmployee();
+ 
 
   if (kIsWeb) {
     const FlutterSecureStorage().setOptions(
@@ -27,10 +37,12 @@ void main() async {
       ),
     );
   }
-ApiConfig.init();
-  final webSocketService = StompWebSocketService();
-  webSocketService.connect();
-  runApp( const MyApp());
+  ApiConfig.init();
+  runApp(const MyApp());
+}
+
+void startCallback() {
+  FlutterForegroundTask.setTaskHandler(ReportBackgroundTaskHandler());
 }
 
 extension on FlutterSecureStorage {
@@ -49,26 +61,58 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  StreamSubscription<String>? _wsSubscription;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _startWebSocket();
+  }
+
+  void _startWebSocket() {
     _webSocketService.connect();
+    _wsSubscription?.cancel();
+    _wsSubscription = _webSocketService.reportStream.listen((msg) {
+      print('Main: تم استقبال بلاغ جديد من WebSocket: $msg');
+      NotificationHelper.showNotification('بلاغ جديد', msg);
+      // يمكنك هنا تحديث الواجهة أيضاً
+    });
+  }
+
+  void _stopWebSocket() {
+    _wsSubscription?.cancel();
+    _webSocketService.dispose();
+    _wsSubscription = ReportNotificationHandler.listenToWebSocket(
+        _webSocketService.reportStream);
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && !_webSocketService.isConnected) {
-      _webSocketService.connect();
+    if (state == AppLifecycleState.paused) {
+      // التطبيق دخل الخلفية
+      _stopWebSocket();
+      FlutterForegroundTask.startService(
+        notificationTitle: 'CivicEye',
+        notificationText: 'يتم الاستماع للبلاغات الجديدة...',
+        callback: startCallback,
+      );
+    } else if (state == AppLifecycleState.resumed) {
+      // التطبيق عاد للواجهة
+      FlutterForegroundTask.stopService();
+       if (!_webSocketService.isConnected) {
+        _webSocketService.connect();
+      }
     }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _webSocketService.dispose();
+    _stopWebSocket();
     super.dispose();
   }
+
   Future<String> _getInitialRoute() async {
     final prefs = await SharedPreferences.getInstance();
     final lastPage = prefs.getString('last_page');
@@ -80,11 +124,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     return MultiProvider(
       providers: [
         Provider<StompWebSocketService>(
-          create: (_) {
-            final service = StompWebSocketService();
-            service.connect();
-            return service;
-          },
+          create: (_) => StompWebSocketService(),
           dispose: (_, service) => service.dispose(),
         ),
       ],

@@ -201,7 +201,10 @@ class ReportsCubit extends Cubit<ReportsState> {
       orElse: () => ReportModel.empty(),
     );
 
-    final latestReports = _allReports.take(3).toList();
+    
+    final sortedReports = List<ReportModel>.from(_allReports)
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final latestReports = sortedReports.take(3).toList();
     final reportCounts = _calculateReportCounts(_allReports);
 
     emit(ReportsLoaded(

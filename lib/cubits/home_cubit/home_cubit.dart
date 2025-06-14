@@ -35,7 +35,7 @@ class ReportCubit extends Cubit<ReportState> {
           todayReports.where((r) => r.currentStatus == 'In_Progress').length;
       int resolvedCount =
           todayReports.where((r) => r.currentStatus == 'Resolved').length;
-
+      todayReports.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       ReportModel? currentReport = todayReports
           .firstWhereOrNull((r) => r.currentStatus == 'In_Progress');
 

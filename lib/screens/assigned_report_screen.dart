@@ -15,7 +15,8 @@ import '../widgets/report_card.dart';
 import '../animations/reports_animation.dart';
 
 class ReportsScreen extends StatefulWidget {
-  const ReportsScreen({super.key});
+  final String? initialStatus;
+  const ReportsScreen({super.key, this.initialStatus});
 
   @override
   State<ReportsScreen> createState() => _ReportsScreenState();
@@ -32,12 +33,21 @@ const Map<String, String> statusLabels = {
 
 class _ReportsScreenState extends State<ReportsScreen> {
   final ScrollController _scrollController = ScrollController();
+  String? _activeStatus; // الحالة النشطة للفلاتر
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    context.read<ReportsCubit>().getReports();
+    if (widget.initialStatus != null) {
+      _activeStatus = widget.initialStatus;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final cubit = context.read<ReportsCubit>();
+        cubit.filterByStatus(_activeStatus!);
+      });
+    } else {
+      context.read<ReportsCubit>().getReports();
+    }
   }
 
   @override
@@ -75,50 +85,52 @@ class _ReportsScreenState extends State<ReportsScreen> {
           final width = constraints.maxWidth;
           final height = constraints.maxHeight;
           return Column(
-        children: [
-          _buildStatusFilterBar(cubit, colorScheme),
-          Expanded(
-            child: BlocBuilder<ReportsCubit, ReportsState>(
-              builder: (context, state) {
-                final reports = state is ReportsLoaded ? state.report : [];
-                final hasMore = state is ReportsLoaded ? state.hasMore : false;
+            children: [
+              _buildStatusFilterBar(cubit, colorScheme),
+              Expanded(
+                child: BlocBuilder<ReportsCubit, ReportsState>(
+                  builder: (context, state) {
+                    final reports = state is ReportsLoaded ? state.report : [];
+                    final hasMore =
+                        state is ReportsLoaded ? state.hasMore : false;
 
-                if (state is ReportsLoading && reports.isEmpty) {
-                  return _buildShimmerList();
-                }
+                    if (state is ReportsLoading && reports.isEmpty) {
+                      return _buildShimmerList();
+                    }
 
-                if (state is ReportsError) {
-                  return AppErrorWidget(message: state.message);
-                }
+                    if (state is ReportsError) {
+                      return AppErrorWidget(message: state.message);
+                    }
 
-                if (reports.isEmpty) {
-                  return const Center(child: Text('لا توجد بلاغات'));
-                }
+                    if (reports.isEmpty) {
+                      return const Center(child: Text('لا توجد بلاغات'));
+                    }
 
-                return RefreshIndicator(
-                  onRefresh: () => cubit.getReports(),
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    itemCount: hasMore ? reports.length + 1 : reports.length,
-                    itemBuilder: (context, index) {
-                      if (index >= reports.length) {
-                        return const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      }
+                    return RefreshIndicator(
+                      onRefresh: () => cubit.getReports(),
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        itemCount:
+                            hasMore ? reports.length + 1 : reports.length,
+                        itemBuilder: (context, index) {
+                          if (index >= reports.length) {
+                            return const Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
 
-                      final report = reports[index];
-                      return _buildReportCard(report, colorScheme);
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+                          final report = reports[index];
+                          return _buildReportCard(report, colorScheme);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           );
-        },  
+        },
       ),
     );
   }
@@ -157,7 +169,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final horizontalPadding = screenWidth * 0.03;
     return ListView.builder(
-        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 8),
       itemCount: 6,
       itemBuilder: (context, index) => const Padding(
         padding: EdgeInsets.symmetric(vertical: 8),
