@@ -43,8 +43,33 @@ class _HomeScreenState extends State<HomeScreen> {
           if (index == 2) Navigator.pushReplacementNamed(context, '/profile');
         },
       ),
-      body: BlocBuilder<ReportsCubit, ReportsState>(
-        builder: (context, state) {
+      body: BlocListener<ReportsCubit, ReportsState>(
+        listenWhen: (previous, current) {
+          // يظهر فقط عند إضافة بلاغ جديد
+          if (previous is ReportsLoaded && current is ReportsLoaded) {
+            if (current.latestReports.isNotEmpty && previous.latestReports.isNotEmpty) {
+              return current.latestReports.first.reportId != previous.latestReports.first.reportId;
+            } else if (current.latestReports.isNotEmpty && previous.latestReports.isEmpty) {
+              return true;
+            }
+          }
+          return false;
+        },
+        listener: (context, state) {
+          if (state is ReportsLoaded && state.latestReports.isNotEmpty) {
+            final report = state.latestReports.first;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('تم استقبال بلاغ جديد: ${report.title}'),
+                duration: const Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Colors.green[700],
+              ),
+            );
+          }
+        },
+        child: BlocBuilder<ReportsCubit, ReportsState>(
+          builder: (context, state) {
           if (state is ReportsLoading) {
             return const HomeScreenShimmer();
           }
@@ -172,41 +197,44 @@ class _HomeScreenState extends State<HomeScreen> {
                               color: AppColors.primary.withOpacity(0.5),
                               thickness: 1),
                           if (state.latestReports.isNotEmpty)
-                            ...state.latestReports.map((report) => Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 4),
-                                  child: Card(
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
-                                    child: ListTile(
-                                      title: Text(report.title),
-                                      subtitle: Text(
-                                        timeago.format(report.createdAt,
-                                            locale: 'ar'),
-                                        style: TextStyle(
-                                          color: isDarkMode
-                                              ? Colors.white70
-                                              : Colors.grey[700],
-                                        ),
-                                      ),
-                                      trailing: const Icon(Icons.chevron_right,
-                                          color: AppColors.primary),
-                                      onTap: () => _navigateTo(
-                                        context,
-                                        ReportDetailsScreen(
-                                          report: report,
-                                          reportId: report.reportId,
-                                          employeeId: context
-                                                  .read<ReportsCubit>()
-                                                  .employeeId
-                                                  ?.toString() ??
-                                              '',
-                                        ),
+                            ...state.latestReports
+                                .take(3)
+                                .map((report) => Padding(
+                                      padding:
+                                          const EdgeInsets.symmetric(vertical: 4),
+                                      child: Card(
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12)),
+                                        child: ListTile(
+                                          title: Text(report.title),
+                                          subtitle: Text(
+                                            timeago.format(report.createdAt,
+                                                locale: 'ar'),
+                                            style: TextStyle(
+                                              color: isDarkMode
+                                                  ? Colors.white70
+                                                  : Colors.grey[700],
+                                            ),
+                                          ),
+                                          trailing: const Icon(Icons.chevron_right,
+                                              color: AppColors.primary),
+                                          onTap: () => _navigateTo(
+                                            context,
+                                            ReportDetailsScreen(
+                                              report: report,
+                                              reportId: report.reportId,
+                                              employeeId: context
+                                                      .read<ReportsCubit>()
+                                                      .employeeId
+                                                      ?.toString() ??
+                                                  '',
+                                            ),
+                                          ),
                                       ),
                                     ),
                                   ),
-                                ))
+                                )
                           else
                             _buildEmptyMessage('لا توجد بلاغات حديثة حالياً.'),
                         ],
@@ -221,6 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return const SizedBox.shrink();
         },
       ),
+    ),
     );
   }
 
@@ -314,3 +343,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+

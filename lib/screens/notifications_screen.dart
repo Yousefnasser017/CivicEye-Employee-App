@@ -30,6 +30,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void initState() {
     super.initState();
     _loadNotifications();
+    // تصفير عداد الإشعارات عند فتح الصفحة
+    NotificationCounter.reset();
     // الاستماع لحالة الاتصال
     _wsStatusSubscription =
         StompWebSocketService().connectionStatusStream.listen((status) {
@@ -91,6 +93,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       'body': body,
       'time': DateTime.now().toIso8601String(),
     });
+  }
+  Future<void> _removeNotificationAt(int index) async {
+    await NotificationsStorage.clearNotificationAt(index);
+    await _loadNotifications();
+    NotificationCounter.notifier.value = notifications.length;
   }
 
   @override
@@ -482,7 +489,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       style: TextStyle(color: subtitleColor)),
                   trailing: Icon(Icons.notifications, color: iconColor),
                   onTap: () {
-                    // عرض التفاصيل ...
+                    final reportId = notif['reportId'];
+                    if (reportId != null && reportId.isNotEmpty) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ReportDetailsScreen(
+                            report: null,
+                            reportId: int.tryParse(reportId) ?? 0,
+                            employeeId: '', // إذا توفر مرر employeeId
+                          ),
+                        ),
+                      );
+                    } else {
+                      // إذا لم يوجد reportId يمكن عرض رسالة أو تفاصيل نصية فقط
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('تفاصيل الإشعار'),
+                          content: Text(notif['body'] ?? ''),
+                          actions: [
+                            TextButton(
+                              child: const Text('إغلاق'),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
                   },
                 ),
               );

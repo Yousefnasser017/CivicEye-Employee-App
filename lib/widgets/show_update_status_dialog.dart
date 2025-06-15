@@ -285,8 +285,12 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
                                         await reportsCubit.getReports();
                                         final cubitState = reportsCubit.state;
                                         if (cubitState is ReportsLoaded) {
+                                           final reportsCubit =
+                                              context.read<ReportsCubit>();
+                                          final allReports =
+                                              reportsCubit.allReports;
                                           final hasOtherInProgress =
-                                              cubitState.report.any(
+                                              allReports.any(
                                             (r) =>
                                                 r.currentStatus ==
                                                     ReportStatus

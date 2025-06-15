@@ -1,6 +1,7 @@
-// ignore_for_file: depend_on_referenced_packages, library_private_types_in_public_api
+// ignore_for_file: depend_on_referenced_packages, library_private_types_in_public_api, avoid_print
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:civiceye/core/config/app_config.dart';
 import 'package:civiceye/core/config/websocket.dart';
@@ -14,6 +15,7 @@ import 'package:civiceye/cubits/report_cubit/report_detail_cubit.dart';
 import 'package:civiceye/cubits/theme_cubit/theme_cubit.dart';
 import 'package:civiceye/cubits/auth_cubit/auth_cubit.dart';
 import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
+import 'package:civiceye/models/report_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -62,6 +64,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   StreamSubscription<String>? _wsSubscription;
+  
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -71,11 +75,25 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   void _startWebSocket() {
+    
     _webSocketService.connect();
     _wsSubscription?.cancel();
     _wsSubscription = _webSocketService.reportStream.listen((msg) {
       print('Main: تم استقبال بلاغ جديد من WebSocket: $msg');
       NotificationHelper.showNotification('بلاغ جديد', msg);
+      try {
+        final decoded = jsonDecode(msg);
+        if (decoded is Map<String, dynamic>) {
+          final report = ReportModel.fromJson(decoded);
+          // مرر البلاغ الجديد مباشرة للـ ReportsCubit
+          final cubit = BlocProvider.of<ReportsCubit>(
+              navigatorKey.currentContext ?? context,
+              listen: false);
+          cubit.addReport(report);
+        }
+      } catch (e) {
+        print('خطأ في تحويل البلاغ الجديد إلى ReportModel: $e');
+      }
       // يمكنك هنا تحديث الواجهة أيضاً
     });
   }

@@ -1,16 +1,15 @@
+// ignore_for_file: empty_catches
+
 import 'dart:convert';
+import 'dart:io';
+import 'package:civiceye/core/services/notifications_storage.dart';
 import 'package:civiceye/core/storage/cache_helper.dart';
 import 'package:civiceye/models/report_model.dart';
 import 'package:civiceye/screens/report_details.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
-
-
-
-import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationHelper {
   static late final dynamic employee;
@@ -90,21 +89,14 @@ static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>(
       ),
     );
     // احفظ الإشعار في التخزين المحلي لعرضه في صفحة الإشعارات
-        try {
-      final prefs = await SharedPreferences.getInstance();
-      const key = 'local_notifications_list';
-      final data = prefs.getStringList(key) ?? [];
+       
       final notification = {
-        'title': title,
-        'body': body,
-        'time': DateTime.now().toIso8601String(),
-        if (reportId != null) 'reportId': reportId,
-      };
-      data.insert(0, json.encode(notification));
-      await prefs.setStringList(key, data);
-    } catch (e) {
-      // تجاهل أي خطأ في التخزين المحلي
-    }
+      'title': title,
+      'body': body,
+      'time': DateTime.now().toIso8601String(),
+      if (reportId != null) 'reportId': reportId,
+    };
+    await NotificationsStorage.addNotification(Map<String, String>.from(notification));
   }
-
 }
+

@@ -33,7 +33,7 @@ class ReportsCubit extends Cubit<ReportsState> {
 
   String selectedStatus;
   List<ReportModel> _allReports = [];
-
+  List<ReportModel> get allReports => _allReports;
   int? get employeeId => _employeeId;
 
   Future<void> _loadEmployeeId() async {
@@ -71,7 +71,9 @@ class ReportsCubit extends Cubit<ReportsState> {
         orElse: () => ReportModel.empty(),
       );
 
-      final latestReports = _allReports.take(3).toList();
+     final sortedReports = List<ReportModel>.from(_allReports)
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      final latestReports = sortedReports.take(3).toList();
 
       final reportCounts = _calculateReportCounts(_allReports);
 
@@ -104,7 +106,29 @@ class ReportsCubit extends Cubit<ReportsState> {
     }
     return counts;
   }
-
+  void addReport(ReportModel report) {
+    // تحقق إذا كان البلاغ موجود بالفعل (بناءً على reportId)
+    final exists = _allReports.any((r) => r.reportId == report.reportId);
+    if (!exists) {
+      _allReports.insert(0, report); // أضف البلاغ في الأعلى
+      final filtered = _applyFilter(_allReports);
+      final inProgressReport = _allReports.firstWhere(
+        (r) => r.currentStatus == 'In_Progress',
+        orElse: () => ReportModel.empty(),
+      );
+      final sortedReports = List<ReportModel>.from(_allReports)
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      final latestReports = sortedReports.take(3).toList();
+      final reportCounts = _calculateReportCounts(_allReports);
+      emit(ReportsLoaded(
+        report: filtered.take(_perPage).toList(),
+        hasMore: filtered.length > _perPage,
+        inProgressReport: inProgressReport,
+        latestReports: latestReports,
+        reportCountsByStatus: reportCounts,
+      ));
+    }
+  }
   Future<void> filterByStatus(String status) async {
     selectedStatus = status;
     await getReports();
