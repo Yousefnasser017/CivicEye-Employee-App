@@ -139,28 +139,29 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
         ),
         body: BlocConsumer<ReportDetailCubit, ReportDetailState>(
           listener: (context, state) {
-            if (state is ReportDetailLoaded) {
-              setState(() {
-                _currentReport = state.report;
-                _isUpdatingStatus = false;
-              });
-            } else if (state is ReportDetailUpdating) {
-              setState(() {
-                _isUpdatingStatus = true;
-              });
-            } else if (state is ReportDetailUpdated) {
-              setState(() {
-                _currentReport = state.report;
-                _isUpdatingStatus = false;
-              });
-              SnackBarHelper.show(context, 'تم تحديث الحالة بنجاح',
-                  type: SnackBarType.success);
+            if (state is ReportDetailLoaded || state is ReportDetailUpdated) {
+              if (state.report != null) {
+                setState(() {
+                  _currentReport = state.report!;
+                  _isUpdatingStatus = false;
+                });
+
+                if (state is ReportDetailUpdated) {
+                  // فقط نعرض رسالة النجاح
+                  SnackBarHelper.show(context, 'تم تحديث الحالة بنجاح',
+                      type: SnackBarType.success);
+                }
+              }
             } else if (state is ReportDetailError) {
               setState(() {
                 _isUpdatingStatus = false;
               });
               SnackBarHelper.show(context, state.message,
                   type: SnackBarType.error);
+            } else if (state is ReportDetailLoading) {
+              setState(() {
+                _isUpdatingStatus = true;
+              });
             }
           },
           builder: (context, state) {
@@ -171,7 +172,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
 
             final displayReport = _currentReport;
 
-          ReportStatus? status;
+            ReportStatus? status;
             try {
               status = ReportStatus.values.firstWhere(
                 (e) => e.name == displayReport.currentStatus,
@@ -236,7 +237,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                       }
                     },
                   ),
-                   status != null
+                  status != null
                       ? ReportStatusCard(
                           status: status,
                           isLoading: _isUpdatingStatus,
@@ -249,7 +250,7 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                                 color: Colors.red, fontWeight: FontWeight.bold),
                             textAlign: TextAlign.center,
                           ),
-                  ),
+                        ),
                   const SizedBox(height: 20),
                   if (status != ReportStatus.Resolved &&
                       status != ReportStatus.Cancelled)

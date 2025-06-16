@@ -17,7 +17,7 @@ class ReportNotificationHandler {
         if (reportId != null) {
           try {
             final report = await ReportApi.getReportDetails(reportId);
-            final since = _getTimeAgo(report.createdAt);
+            final since = getTimeAgo(report.createdAt);
             final notificationBody =
                 'بلاغ: ${report.title}\nالمدينة: ${report.cityName}\n$since';
             NotificationHelper.showNotification('بلاغ جديد', notificationBody);
@@ -34,7 +34,7 @@ class ReportNotificationHandler {
     });
   }
 
- static String _getTimeAgo(DateTime createdAt) {
+ static String getTimeAgo(DateTime createdAt) {
     final now = DateTime.now();
     final diff = now.difference(createdAt);
     final days = diff.inDays;

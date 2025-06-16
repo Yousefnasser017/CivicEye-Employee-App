@@ -29,7 +29,6 @@ void main() async {
   await NotificationHelper.init();
   // إشعار تجريبي للتأكد من عمل الإشعارات
   await NotificationHelper.initEmployee();
- 
 
   if (kIsWeb) {
     const FlutterSecureStorage().setOptions(
@@ -44,7 +43,7 @@ void main() async {
 }
 
 void startCallback() {
-  FlutterForegroundTask.setTaskHandler(ReportBackgroundTaskHandler());
+  FlutterForegroundTask.setTaskHandler(ReliableBackgroundTaskHandler());
 }
 
 extension on FlutterSecureStorage {
@@ -64,8 +63,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   StreamSubscription<String>? _wsSubscription;
-  
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -75,7 +74,6 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   }
 
   void _startWebSocket() {
-    
     _webSocketService.connect();
     _wsSubscription?.cancel();
     _wsSubscription = _webSocketService.reportStream.listen((msg) {
@@ -118,7 +116,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
     } else if (state == AppLifecycleState.resumed) {
       // التطبيق عاد للواجهة
       FlutterForegroundTask.stopService();
-       if (!_webSocketService.isConnected) {
+      if (!_webSocketService.isConnected) {
         _webSocketService.connect();
       }
     }

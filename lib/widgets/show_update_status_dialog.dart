@@ -1,7 +1,6 @@
 // ignore_for_file: unused_local_variable, deprecated_member_use
 import 'package:civiceye/core/themes/app_colors.dart';
 import 'package:civiceye/cubits/report_cubit/report_cubit.dart';
-import 'package:civiceye/cubits/report_cubit/report_state.dart';
 import 'package:civiceye/widgets/SnackbarHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,12 +12,13 @@ import 'package:civiceye/models/report_status_enum.dart';
 class UpdateStatusDialog extends StatefulWidget {
   final ReportModel report;
   final int employeeId;
-
+  final Future<bool?> Function(String newStatus, String? notes) onStatusUpdated;
   const UpdateStatusDialog({
-    super.key,
+    Key? key,
     required this.report,
     required this.employeeId,
-  });
+    required this.onStatusUpdated,
+  }) : super(key: key);
 
   static Future<ReportStatus?> show({
     required BuildContext context,
@@ -36,6 +36,7 @@ class UpdateStatusDialog extends StatefulWidget {
           child: UpdateStatusDialog(
             report: report,
             employeeId: employeeId,
+            onStatusUpdated: (String newStatus, String? notes) async => true,
           ),
         );
       },
@@ -269,23 +270,18 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
                           child: SizedBox(
                             height: 45,
                             child: ElevatedButton(
-                             onPressed: (isStatusUpdating ||
+                              onPressed: (isStatusUpdating ||
                                       isCheckingInProgressButton ||
                                       selectedStatus == currentStatus)
                                   ? null
                                   : () async {
                                       setState(() =>
-                                          isCheckingInProgressButton =
-                                              true); // إظهار اللودينج
+                                          isCheckingInProgressButton = true);
 
-                                      if (selectedStatus ==
-                                          ReportStatus.In_Progress) {
-                                        final reportsCubit =
-                                            context.read<ReportsCubit>();
-                                        await reportsCubit.getReports();
-                                        final cubitState = reportsCubit.state;
-                                        if (cubitState is ReportsLoaded) {
-                                           final reportsCubit =
+                                      try {
+                                        if (selectedStatus ==
+                                            ReportStatus.In_Progress) {
+                                          final reportsCubit =
                                               context.read<ReportsCubit>();
                                           final allReports =
                                               reportsCubit.allReports;
@@ -298,10 +294,8 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
                                                 r.reportId !=
                                                     widget.report.reportId,
                                           );
+
                                           if (hasOtherInProgress) {
-                                            setState(() =>
-                                                isCheckingInProgressButton =
-                                                    false); // إخفاء اللودينج
                                             SnackBarHelper.show(
                                               context,
                                               'لايمكن تحديث الحالة يوجد بلاغ جاري حاليا',
@@ -310,12 +304,32 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
                                             return;
                                           }
                                         }
-                                      }
 
-                                      setState(() =>
-                                          isCheckingInProgressButton =
-                                              false); // إخفاء اللودينج
-                                      Navigator.of(context).pop(selectedStatus);
+                                        final cubit =
+                                            context.read<ReportDetailCubit>();
+                                        final result =
+                                            await cubit.updateReportStatus(
+                                          widget.report,
+                                          selectedStatus.name,
+                                          notesController.text.trim(),
+                                          widget.employeeId,
+                                        );
+
+                                        if (result != null) {
+                                          setState(() {
+                                            isCheckingInProgressButton = false;
+                                          });
+                                        }
+                                      } catch (e) {
+                                        SnackBarHelper.show(
+                                          context,
+                                          'حدث خطأ أثناء تحديث الحالة',
+                                          type: SnackBarType.error,
+                                        );
+                                      } finally {
+                                        setState(() =>
+                                            isCheckingInProgressButton = false);
+                                      }
                                     },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: isStatusUpdating
@@ -325,7 +339,7 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
-                             child: (isStatusUpdating ||
+                              child: (isStatusUpdating ||
                                       isCheckingInProgressButton)
                                   ? const SizedBox(
                                       height: 20,
@@ -364,8 +378,10 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
 
     switch (currentStatus) {
       case ReportStatus.Submitted:
-        available.addAll([ ReportStatus.In_Progress,
-          ReportStatus.Cancelled,]);
+        available.addAll([
+          ReportStatus.In_Progress,
+          ReportStatus.Cancelled,
+        ]);
         break;
       case ReportStatus.In_Progress:
         available.addAll([

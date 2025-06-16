@@ -1,3 +1,5 @@
+// ignore_for_file: annotate_overrides
+
 import 'package:civiceye/models/report_model.dart';
 import 'package:equatable/equatable.dart';
 
@@ -40,7 +42,10 @@ class ReportDetailInitial extends ReportDetailState {}
 
 class ReportDetailLoading extends ReportDetailState {}
 
-class ReportDetailUpdating extends ReportDetailState {}
+class ReportDetailUpdating extends ReportDetailState {
+    final ReportModel report;
+  const ReportDetailUpdating({required this.report});
+}
 
 class ReportDetailLoaded extends ReportDetailState {
   @override
@@ -64,8 +69,10 @@ class ReportDetailUpdated extends ReportDetailState {
 
 class ReportDetailError extends ReportDetailState {
   final String message;
+  final ReportModel? report;
+  const ReportDetailError({required this.message, this.report});
 
-  const ReportDetailError({required this.message});
+
 
   @override
   List<Object> get props => [message];
