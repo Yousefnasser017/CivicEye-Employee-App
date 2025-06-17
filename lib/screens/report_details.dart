@@ -267,14 +267,14 @@ class _ReportDetailsScreenState extends State<ReportDetailsScreen> {
                             employeeId: int.parse(widget.employeeId),
                           );
 
-                          if (newStatus != null &&
-                              newStatus.toString().isNotEmpty) {
+                          if (newStatus.$1 != null &&
+                              newStatus.$1.toString().isNotEmpty) {
                             await context
                                 .read<ReportDetailCubit>()
                                 .updateReportStatus(
                                   displayReport,
-                                  newStatus.name,
-                                  displayReport.notes ?? '',
+                                  newStatus.$1!.name,
+                                  newStatus.$2 ?? '',
                                   int.parse(widget.employeeId),
                                 );
                           }

@@ -41,9 +41,6 @@ class ReliableBackgroundTaskHandler extends TaskHandler {
       // 3. الاتصال بالـ WebSocket
       await _connectWebSocket();
 
-      // 4. إعداد مؤقت للحفاظ على الاتصال
-      _setupKeepAlive();
-
       // 5. إعداد فحص صحة الاتصال
       _setupHealthCheck();
 
@@ -77,8 +74,6 @@ class ReliableBackgroundTaskHandler extends TaskHandler {
     _healthCheckTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (!_isConnected) {
         _connectWebSocket();
-      } else {
-        _webSocketService.sendKeepAlive();
       }
     });
   }
@@ -109,17 +104,6 @@ class ReliableBackgroundTaskHandler extends TaskHandler {
       print('[Background] Connection Error: $e');
       _handleConnectionError();
     }
-  }
-
-  void _setupKeepAlive() {
-    _keepAliveTimer?.cancel();
-    _keepAliveTimer = Timer.periodic(const Duration(minutes: 2), (_) {
-      if (_isConnected) {
-        _webSocketService.sendKeepAlive();
-      } else {
-        _connectWebSocket();
-      }
-    });
   }
 
   Future<void> _handleIncomingMessage(String msg) async {

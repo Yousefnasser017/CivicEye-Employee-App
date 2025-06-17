@@ -20,12 +20,12 @@ class UpdateStatusDialog extends StatefulWidget {
     required this.onStatusUpdated,
   }) : super(key: key);
 
-  static Future<ReportStatus?> show({
+  static Future<(ReportStatus?, String?)> show({
     required BuildContext context,
     required ReportModel report,
     required int employeeId,
   }) async {
-    final result = await showGeneralDialog<ReportStatus?>(
+    final result = await showGeneralDialog<(ReportStatus?, String?)>(
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Update Status',
@@ -48,7 +48,7 @@ class UpdateStatusDialog extends StatefulWidget {
       },
     );
 
-    return result;
+    return result ?? (null, null);
   }
 
   @override
@@ -91,7 +91,8 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
     return BlocListener<ReportDetailCubit, ReportDetailState>(
       listener: (context, state) {
         if (state is ReportDetailUpdated) {
-          Navigator.of(context).pop(selectedStatus);
+          Navigator.of(context)
+              .pop((selectedStatus, notesController.text.trim()));
         } else if (state is ReportDetailError) {
           SnackBarHelper.show(context, state.message, type: SnackBarType.error);
         }
@@ -305,21 +306,10 @@ class _UpdateStatusDialogState extends State<UpdateStatusDialog> {
                                           }
                                         }
 
-                                        final cubit =
-                                            context.read<ReportDetailCubit>();
-                                        final result =
-                                            await cubit.updateReportStatus(
-                                          widget.report,
-                                          selectedStatus.name,
-                                          notesController.text.trim(),
-                                          widget.employeeId,
-                                        );
-
-                                        if (result != null) {
-                                          setState(() {
-                                            isCheckingInProgressButton = false;
-                                          });
-                                        }
+                                        Navigator.of(context).pop((
+                                          selectedStatus,
+                                          notesController.text.trim()
+                                        ));
                                       } catch (e) {
                                         SnackBarHelper.show(
                                           context,

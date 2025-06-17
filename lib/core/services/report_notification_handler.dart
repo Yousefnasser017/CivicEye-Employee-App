@@ -4,49 +4,65 @@ import 'dart:async';
 import 'package:civiceye/core/api/report_service.dart';
 import 'package:civiceye/core/services/notification_helper.dart';
 
-
 class ReportNotificationHandler {
   static StreamSubscription<String> listenToWebSocket(
       Stream<String> reportStream) {
     return reportStream.listen((msg) async {
       print('NotificationHandler: تم استقبال بلاغ جديد من WebSocket: $msg');
-      final regExp = RegExp(r'Report #(\d+)');
-      final match = regExp.firstMatch(msg);
-      if (match != null) {
-        final reportId = int.tryParse(match.group(1) ?? '');
-        if (reportId != null) {
-          try {
+      try {
+        // تحليل الرسالة للحصول على reportId
+        final regExp = RegExp(r'Report #(\d+)');
+        final match = regExp.firstMatch(msg);
+        if (match != null) {
+          final reportId = int.tryParse(match.group(1) ?? '');
+          if (reportId != null) {
+            // جلب تفاصيل البلاغ
             final report = await ReportApi.getReportDetails(reportId);
+
+            // تجهيز نص الإشعار
             final since = getTimeAgo(report.createdAt);
-            final notificationBody =
-                'بلاغ: ${report.title}\nالمدينة: ${report.cityName}\n$since';
-            NotificationHelper.showNotification('بلاغ جديد', notificationBody);
-          } catch (e) {
+            final notificationBody = '''
+              بلاغ جديد #${report.reportId}
+              العنوان: ${report.title}
+              المدينة: ${report.cityName ?? 'غير محدد'}
+              القسم: ${report.department}
+              الوصف: ${report.description ?? 'لا يوجد وصف'}
+              منذ: $since
+              ''';
+
+            // عرض الإشعار
             NotificationHelper.showNotification(
-                'بلاغ جديد', 'تم تعيين بلاغ جديد. (تعذر جلب التفاصيل)');
+              'بلاغ جديد #${report.reportId}',
+              notificationBody,
+              reportId: reportId.toString(),
+            );
           }
         } else {
+          // إذا لم نتمكن من استخراج reportId، نعرض الرسالة كما هي
           NotificationHelper.showNotification('بلاغ جديد', msg);
         }
-      } else {
-        NotificationHelper.showNotification('بلاغ جديد', msg);
+      } catch (e) {
+        print('خطأ في معالجة الإشعار: $e');
+        NotificationHelper.showNotification(
+          'بلاغ جديد',
+          'تم استلام بلاغ جديد. (تعذر جلب التفاصيل)',
+        );
       }
     });
   }
 
- static String getTimeAgo(DateTime createdAt) {
+  static String getTimeAgo(DateTime createdAt) {
     final now = DateTime.now();
     final diff = now.difference(createdAt);
-    final days = diff.inDays;
-    final hours = diff.inHours % 24;
-    final minutes = diff.inMinutes % 60;
 
-    String since = '';
-    if (days > 0) since += 'منذ $days يوم${days > 1 ? 's' : ''}';
-    if (hours > 0) since += since.isEmpty ? 'منذ $hours ساعة' : ' و$hours ساعة';
-    if (minutes > 0 && days == 0)
-      since += since.isEmpty ? 'منذ $minutes دقيقة' : ' و$minutes دقيقة';
-    if (since.isEmpty) since = 'الآن';
-    return since;
+    if (diff.inDays > 0) {
+      return 'منذ ${diff.inDays} يوم';
+    } else if (diff.inHours > 0) {
+      return 'منذ ${diff.inHours} ساعة';
+    } else if (diff.inMinutes > 0) {
+      return 'منذ ${diff.inMinutes} دقيقة';
+    } else {
+      return 'الآن';
+    }
   }
 }

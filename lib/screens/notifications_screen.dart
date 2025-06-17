@@ -307,7 +307,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               : _notifications.isEmpty
                   ? const EmptyState(
                       message: 'لا توجد إشعارات جديدة',
-                      icon: Icons.notifications_none,
+                      icon: Icons.notifications_off_outlined,
                     )
                   : RefreshIndicator(
                       onRefresh: _loadNotifications,
